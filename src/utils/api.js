@@ -3,7 +3,7 @@
  * Connects frontend Vue application to the Express backend.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lokalens-backend-55311638902.asia-southeast2.run.app/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lokalens-backend-475607089587.asia-southeast2.run.app/api'
 
 /**
  * Enhanced fetch with HTML response detection
