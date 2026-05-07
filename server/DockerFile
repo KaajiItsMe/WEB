@@ -1,7 +1,21 @@
+# Use a specific version for stability
 FROM node:20-slim
+
+# Set working directory
 WORKDIR /app
+
+# Copy package files first for better caching
 COPY package*.json ./
+
+# Install production dependencies only
+# Use npm ci for faster, more reliable builds in Docker
 RUN npm ci --only=production
+
+# Copy the rest of the application code
 COPY . .
+
+# Expose the application port
 EXPOSE 3000
+
+# Start the application
 CMD ["node", "index.js"]
