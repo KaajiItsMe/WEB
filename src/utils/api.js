@@ -3,7 +3,7 @@
  * Connects frontend Vue application to the Express backend.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lokalens-backend-55311638902.asia-southeast2.run.app/api'
 
 /**
  * Enhanced fetch with HTML response detection
@@ -12,7 +12,7 @@ async function fetchJSON(url, options = {}) {
   console.log('🚀 Fetching:', url)
   const response = await fetch(url, options)
   const text = await response.text()
-  
+
   try {
     const data = JSON.parse(text)
     if (!response.ok) {
