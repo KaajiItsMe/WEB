@@ -209,9 +209,8 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
       result.tag_colors.push(validColors[result.tag_colors.length % validColors.length])
     }
 
-    //
     // 🔥 RED FLAG FALLBACK (If Gemini misses it but reviews contain clear negatives)
-    if (!result.red_flag && placeInput.reviews?.length > 0) {
+    if ((result.red_flag === undefined || result.red_flag === null) && placeInput.reviews?.length > 0) {
       const negativeKeywords = [
         { word: 'julid', label: 'Pelayanan kasir kurang ramah / julid' },
         { word: 'kasir', label: 'Ada keluhan terkait pelayanan kasir' },
@@ -228,9 +227,9 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
       }
     }
 
-    if (result.best_time && !/\d/.test(result.best_time)) {
-      result.best_time = "10:00 - 13:00 (berdasarkan ulasan)"
-    }
+    // Guarantee red_flag & vibes selalu ada sebagai string (minimal "")
+    result.red_flag = result.red_flag ?? ""
+    result.vibes = result.vibes ?? ""
 
     if (!result.community_updates || result.community_updates.length === 0) {
       if (result.parking_info && result.parking_info.parking_sentiment === 'negatif') {

@@ -692,10 +692,10 @@ const submitReview = async () => {
       placeId.toString(), 
       reviewForm.value.rating, 
       reviewForm.value.text, 
-      null, 
-      userId,
       parkingType.value,
-      parkingNotes.value
+      parkingNotes.value,
+      null, // photo
+      userId
     )
     showReviewModal.value = false
     showToast(res.message || "Review berhasil dikirim!")

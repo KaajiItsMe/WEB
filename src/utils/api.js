@@ -74,7 +74,15 @@ export const analyzePlace = async (placeInputData) => {
 // REVIEWS & USER API
 // ==========================
 
-export const submitPrivateReview = async (placeId, rating, reviewText, photo = null, userId = 'anon_user') => {
+export const submitPrivateReview = async (
+  placeId, 
+  rating, 
+  reviewText, 
+  parkingType, 
+  parkingNotes = null, 
+  photo = null, 
+  userId = 'anon_user'
+) => {
   return await fetchJSON(`${API_BASE_URL}/reviews-private`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -82,6 +90,8 @@ export const submitPrivateReview = async (placeId, rating, reviewText, photo = n
       place_id: placeId,
       rating,
       review_text: reviewText,
+      parking_type: parkingType,
+      parking_notes: parkingNotes,
       photo,
       user_id: userId
     })

@@ -315,14 +315,34 @@ app.post('/api/analyze', async (req, res) => {
           const data = doc.data()
           const analyzedAt = data.analyzed_at ? new Date(data.analyzed_at).getTime() : 0
 
-          // Smart Validation: Jika cache masih dalam durasi tapi data KRITIKAL (red_flag/location_data) hilang, paksa re-analyze
-          const isDataComplete = data.red_flag !== undefined && data.location_data !== undefined
+          // 🔥 Stricter Smart Validation: Pastikan semua data kritikal ada di dokumen
+          const isDataComplete =
+            'red_flag' in data &&
+            data.location_data?.latitude != null &&
+            data.location_data?.longitude != null &&
+            data.ai_summary
+
+          // 🛠️ Debug Logging for Cloud Run
+          console.log(`[Cache Check] place_id: ${place_id}`)
+          console.log(`[Cache Check] red_flag value:`, data.red_flag, '| type:', typeof data.red_flag)
+          console.log(`[Cache Check] isDataComplete:`, isDataComplete)
+          console.log(`[Cache Check] age (hours):`, ((Date.now() - analyzedAt) / 1000 / 60 / 60).toFixed(2))
 
           if (Date.now() - analyzedAt < CACHE_DURATION_MS && isDataComplete) {
             console.log(`[Cache Hit] Returning cached analysis for: ${place_id}`)
-            return res.json(data)
+            // 🔥 Normalize response: Pastikan frontend selalu menerima field yang konsisten
+            return res.json({
+              ...data,
+              red_flag: data.red_flag ?? "",
+              vibes: data.vibes ?? "",
+              mood_fit: data.mood_fit || [],
+              tags: data.tags || [],
+              tag_colors: data.tag_colors || [],
+              community_updates: data.community_updates || [],
+              review_stats: data.review_stats || { google_count: 0, lokalens_count: 0, total_google_all: 0 }
+            })
           }
-          console.log(`[Cache Miss/Incomplete] Refreshing analysis for: ${place_id}`)
+          console.log(`[Cache Stale/Incomplete] Re-analyzing... (Complete: ${isDataComplete})`)
         }
       } catch (cacheErr) {
         console.warn('[Cache Error] Failed to read from places_analysis:', cacheErr.message)
