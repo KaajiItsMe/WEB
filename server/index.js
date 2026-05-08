@@ -389,17 +389,15 @@ app.post('/api/analyze', async (req, res) => {
       user_lng
     })
 
-    //
+    // 🔥 VALIDASI: Pastikan data kritikal ada sebelum lanjut ke caching/response
+    if (!analysisResult.ai_summary) throw new Error("Validation Error: ai_summary is missing")
+    if (!analysisResult.location_data?.latitude || !analysisResult.location_data?.longitude) throw new Error("Validation Error: Missing coordinates")
 
     // Tambahkan stats ke hasil akhir sebelum dikirim ke frontend
     const finalResult = {
       ...analysisResult,
       review_stats: placeData.review_stats
     }
-
-    // Validation
-    if (!analysisResult.ai_summary) throw new Error("Validation Error: ai_summary is missing")
-    if (!analysisResult.location_data?.latitude || !analysisResult.location_data?.longitude) throw new Error("Validation Error: Missing coordinates")
 
     // 🔥 CACHE to Firestore 'places_analysis' for Smart Parking labels
     if (place_id) {
@@ -428,8 +426,8 @@ app.post('/api/analyze', async (req, res) => {
           tag_colors: analysisResult.tag_colors || [],
           community_updates: analysisResult.community_updates || [],
           location_data: analysisResult.location_data || null,
-          red_flag: analysisResult.red_flag || null, // FIX: Save red flag to cache
-          vibes: analysisResult.vibes || null, // FIX: Save vibes to cache
+          red_flag: analysisResult.red_flag ?? "", // FIX: Gunakan ?? "" agar string kosong tetap tersimpan
+          vibes: analysisResult.vibes ?? "", // FIX: Gunakan ?? "" agar string kosong tetap tersimpan
           score_overall: analysisResult.score_overall || null,
           score_taste: analysisResult.score_taste || null,
           score_service: analysisResult.score_service || null,
