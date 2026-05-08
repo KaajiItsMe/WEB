@@ -421,6 +421,7 @@ app.post('/api/analyze', async (req, res) => {
           tags: analysisResult.tags || [],
           tag_colors: analysisResult.tag_colors || [],
           community_updates: analysisResult.community_updates || [],
+          location_data: analysisResult.location_data || null, // FIX: Save location data to cache
           review_stats: placeData.review_stats, // 🔥 Simpan stats ke cache
           analyzed_at: new Date().toISOString()
         }, { merge: true })

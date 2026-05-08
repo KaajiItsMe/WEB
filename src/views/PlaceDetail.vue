@@ -709,9 +709,23 @@ const submitReview = async () => {
   }
 }
 
-const getMapsUrl = (loc) => `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`
-const getDirectionsUrl = (loc) => `https://www.google.com/maps/dir/?api=1&destination=${loc.latitude},${loc.longitude}`
-const getWazeUrl = (loc) => `https://waze.com/ul?ll=${loc.latitude},${loc.longitude}&navigate=yes`
+const getMapsUrl = (loc) => {
+  const lat = loc?.latitude || basePlace.value?.lat
+  const lng = loc?.longitude || basePlace.value?.lng
+  return lat ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : '#'
+}
+
+const getDirectionsUrl = (loc) => {
+  const lat = loc?.latitude || basePlace.value?.lat
+  const lng = loc?.longitude || basePlace.value?.lng
+  return lat ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : '#'
+}
+
+const getWazeUrl = (loc) => {
+  const lat = loc?.latitude || basePlace.value?.lat
+  const lng = loc?.longitude || basePlace.value?.lng
+  return lat ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes` : '#'
+}
 
 onMounted(async () => {
   window.scrollTo(0, 0)

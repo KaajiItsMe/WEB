@@ -331,8 +331,8 @@ const goToReview = () => {
   if (props.place?.id) router.push(`/place/${props.place.id}?review=true`)
 }
 
-const getMapsUrl = (place) => `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`
-const getDirectionsUrl = (place) => `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`
+const getMapsUrl = (place) => place?.lat ? `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}` : '#'
+const getDirectionsUrl = (place) => place?.lat ? `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}` : '#'
 </script>
 
 <style scoped>
