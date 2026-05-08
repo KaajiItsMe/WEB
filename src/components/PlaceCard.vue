@@ -89,7 +89,7 @@
           <div v-if="isAlfa" class="absolute inset-0 bg-blue-600 text-white p-3 flex flex-col justify-center animate-fade-in z-10">
             <div class="flex items-center gap-1.5 mb-1 font-bold">
               <span>📢</span>
-              <span class="text-[10px] uppercase tracking-wider">Update Parkir</span>
+              <span class="text-[10px] uppercase tracking-wider">Update</span>
             </div>
             <p class="text-[10px] font-bold leading-tight">
               *Sekarang Alfa sedang membenahi masalah parkir, kemungkinan hasil analisis AI belum sinkron dengan kondisi lapangan saat ini.

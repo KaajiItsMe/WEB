@@ -204,7 +204,7 @@
             <!-- SPECIAL NOTE FOR ALFA -->
             <p v-if="isAlfa" class="mt-2 text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-start gap-1.5 bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg border border-blue-100 dark:border-blue-800/50">
               <span class="shrink-0 text-lg">💡</span>
-              <span>Sekarang Alfa sedang membenahi masalah parkir, kemungkinan data sekarang sudah tidak ada tukang parkir.</span>
+              <span>Sekarang Alfa sedang membenahi masalah parkir, kemungkinan hasil analisis AI belum sinkron dengan kondisi lapangan saat ini.</span>
             </p>
           </div>
         </div>
