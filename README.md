@@ -207,8 +207,8 @@ lokalens/
 | Multi-Language | ✅ Production Ready |
 | Dark Mode | ✅ Production Ready |
 | Google Sign-In | ✅ Production Ready |
-| Deploy Cloud Run | 🚧 In Progress |
-| Places API Integration | ⏳ Menunggu verifikasi kartu |
+| Deploy Cloud Run | ✅ Production Ready |
+| Places API Integration | ✅ Production Ready |
 
 ---
 
