@@ -1,389 +1,551 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans pb-20 md:pb-8">
-    <!-- Navbar -->
-    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-slate-900 dark:bg-primary-500 rounded-lg flex items-center justify-center">
-            <ShieldCheck :size="18" class="text-white" />
-          </div>
-          <h1 class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">LokaLens Admin</h1>
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans">
+    
+    <!-- TOP BAR (Mobile Only) -->
+    <header class="lg:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 px-4 h-16 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-slate-900 dark:bg-primary-500 rounded-lg flex items-center justify-center">
+          <ShieldCheck :size="18" class="text-white" />
         </div>
-        <div class="flex items-center gap-4">
-          <button @click="router.push('/app/home')" class="text-sm font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Exit Admin</button>
+        <h1 class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Admin Panel</h1>
+      </div>
+      <button 
+        @click="mobileMenuOpen = !mobileMenuOpen"
+        class="w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-90"
+      >
+        <span :class="mobileMenuOpen ? 'rotate-45 translate-y-2' : ''" class="w-5 h-0.5 bg-slate-600 dark:bg-slate-400 transition-all duration-300 origin-center"></span>
+        <span :class="mobileMenuOpen ? 'opacity-0 scale-0' : ''" class="w-5 h-0.5 bg-slate-600 dark:bg-slate-400 transition-all duration-300"></span>
+        <span :class="mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''" class="w-5 h-0.5 bg-slate-600 dark:bg-slate-400 transition-all duration-300 origin-center"></span>
+      </button>
+    </header>
+
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <transition name="slide">
+      <div v-if="mobileMenuOpen" class="fixed inset-0 z-50 lg:hidden">
+        <div @click="mobileMenuOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+        <div class="absolute left-0 top-0 h-full w-72 bg-white dark:bg-slate-800 shadow-2xl p-6 flex flex-col border-r border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-3 mb-10 px-2">
+             <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+               <ShieldCheck :size="22" class="text-white" />
+             </div>
+             <h1 class="font-black text-xl text-slate-900 dark:text-white">LokaLens</h1>
+          </div>
+
+          <nav class="flex-1 space-y-1">
+            <button 
+              v-for="tab in tabs" 
+              :key="tab.id"
+              @click="activeTab = tab.id; mobileMenuOpen = false"
+              :class="activeTab === tab.id 
+                ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold shadow-sm' 
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'"
+              class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm transition-all group"
+            >
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                :class="activeTab === tab.id ? 'bg-primary-100 dark:bg-primary-800/30' : 'bg-slate-50 dark:bg-slate-900/50 group-hover:bg-white dark:group-hover:bg-slate-800'">
+                <component :is="tab.icon" :size="18" />
+              </div>
+              <span class="flex-1 text-left">{{ tab.label }}</span>
+              <span v-if="getTabBadge(tab.id) > 0" 
+                class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20">
+                {{ getTabBadge(tab.id) }}
+              </span>
+            </button>
+          </nav>
+
+          <div class="pt-6 border-t border-slate-100 dark:border-slate-700 mt-auto">
+            <button @click="router.push('/app/home')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-500 transition-colors text-sm font-bold">
+              <LogOut :size="18" /> Exit Admin
+            </button>
+          </div>
         </div>
       </div>
-      
-      <!-- TABS BAR -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-slate-700/50">
-        <div class="flex overflow-x-auto hide-scrollbar gap-6 py-3">
-          <button v-for="tab in tabs" :key="tab.id" 
+    </transition>
+
+    <div class="flex">
+      <!-- DESKTOP SIDEBAR -->
+      <aside class="hidden lg:flex flex-col w-72 h-screen bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-6 sticky top-0 overflow-y-auto">
+        <div class="flex items-center gap-3 mb-10 px-2">
+           <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+             <ShieldCheck :size="22" class="text-white" />
+           </div>
+           <div>
+             <h1 class="font-black text-xl leading-none text-slate-900 dark:text-white">LokaLens</h1>
+             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Admin Dashboard</p>
+           </div>
+        </div>
+
+        <nav class="flex-1 space-y-1">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
             @click="activeTab = tab.id"
-            class="flex items-center gap-2 px-1 pb-1 border-b-2 transition-all whitespace-nowrap"
             :class="activeTab === tab.id 
-              ? 'border-emerald-500 text-emerald-600 font-bold' 
-              : 'border-transparent text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300'">
-            <component :is="tab.icon" :size="18" />
-            {{ tab.label }}
+              ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold shadow-sm' 
+              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm transition-all group"
+          >
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+              :class="activeTab === tab.id ? 'bg-primary-100 dark:bg-primary-800/30' : 'bg-slate-50 dark:bg-slate-900/50 group-hover:bg-white dark:group-hover:bg-slate-800'">
+              <component :is="tab.icon" :size="18" />
+            </div>
+            <span class="flex-1 text-left">{{ tab.label }}</span>
             <span v-if="getTabBadge(tab.id) > 0" 
-              class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-              :class="tab.id === 'pending' ? 'bg-red-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'">
+              class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20">
               {{ getTabBadge(tab.id) }}
             </span>
           </button>
-        </div>
-      </div>
-    </header>
+        </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in" :key="activeTab">
-      
-      <!-- TAB: DASHBOARD -->
-      <div v-if="activeTab === 'dashboard'" class="space-y-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div v-for="stat in statsCards" :key="stat.label" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-transform hover:scale-[1.02]">
-            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{{ stat.label }}</p>
-            <div class="flex items-baseline gap-2">
-              <span class="text-3xl font-black" :class="stat.color">{{ stat.value }}</span>
-              <span v-if="stat.subValue" class="text-[10px] text-emerald-500 font-bold">{{ stat.subValue }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- RECENT ACTIVITY MOCK / PLACEHOLDER -->
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-            <History :size="20" class="text-primary-500" /> Ringkasan Aktivitas
-          </h3>
-          <div class="space-y-4">
-            <div v-if="isLoading" class="flex justify-center p-8"><RefreshCw class="animate-spin text-slate-400" /></div>
-            <p v-else class="text-slate-500 text-sm italic text-center py-8">Dashboard statistik utama. Pindah tab untuk aksi moderasi.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: PENDING -->
-      <div v-if="activeTab === 'pending'" class="space-y-4">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="font-black text-2xl">Antrean Moderasi</h2>
-          <button @click="fetchData" class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50">
-            <RefreshCw :size="18" :class="{'animate-spin': isLoading}" />
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-700 mt-auto">
+          <button @click="router.push('/app/home')" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-500 transition-colors text-sm font-bold">
+            <LogOut :size="18" /> Exit Admin
           </button>
         </div>
-        <div v-if="queue.length === 0" class="bg-white dark:bg-slate-800 p-16 rounded-2xl text-center border-2 border-dashed border-slate-200 dark:border-slate-700">
-          <CheckCircle2 :size="64" class="mx-auto text-emerald-400 mb-4 opacity-50" />
-          <h3 class="text-xl font-bold">Semua Bersih!</h3>
-          <p class="text-slate-500 max-w-xs mx-auto text-sm mt-2">Belum ada review baru yang masuk untuk dimoderasi.</p>
-        </div>
-        <div v-else class="grid grid-cols-1 gap-4">
-          <div v-for="item in queue" :key="item.id" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[10px] font-black text-slate-600 dark:text-slate-400">ID: {{ item.id.slice(-6) }}</span>
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ formatTime(item.created_at) }}</span>
-                </div>
-                <h4 class="font-bold text-slate-900 dark:text-white mb-1">Tempat #{{ item.place_id }}</h4>
-                <div class="flex items-center gap-1 text-sm font-bold text-amber-500 mb-3"><Star :size="14" class="fill-amber-500" /> {{ item.rating }}</div>
-                <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">"{{ item.review_text }}"</p>
-              </div>
-              <div class="flex md:flex-col gap-2 shrink-0">
-                <button @click="openDetail(item)" class="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
-                  <Eye :size="14" /> Detail
-                </button>
-                <button @click="openReject(item)" class="flex-1 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-100 dark:border-red-900/50">
-                  <XCircle :size="14" /> Tolak
-                </button>
-                <button @click="handleApprove(item.id)" :disabled="processingId === item.id" class="flex-1 px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50">
-                  <RefreshCw v-if="processingId === item.id" :size="14" class="animate-spin" />
-                  <CheckCircle v-else :size="14" /> Setujui
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </aside>
 
-      <!-- TAB: APPROVED -->
-      <div v-if="activeTab === 'approved'" class="space-y-4">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="font-black text-2xl">Review Disetujui</h2>
-          <div class="flex gap-2">
-             <input type="date" v-model="filterDate" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
-             <button @click="fetchApproved" class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50">
-                <RefreshCw :size="18" :class="{'animate-spin': isFetchingApproved}" />
-             </button>
-          </div>
-        </div>
-        <div v-if="approvedReviews.length === 0" class="text-center py-20 opacity-50">Belum ada review yang disetujui.</div>
-        <div v-else class="grid grid-cols-1 gap-4">
-          <div v-for="item in filteredApproved" :key="item.id" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-            <div class="flex justify-between items-start mb-2">
-              <div>
-                <h4 class="font-bold text-emerald-600 dark:text-emerald-400">Tempat #{{ item.place_id }}</h4>
-                <div class="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase mt-1">
-                  <Calendar :size="10" /> {{ formatTime(item.approved_at || item.updated_at) }}
-                </div>
-              </div>
-              <div class="flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-[10px] font-bold">
-                 <Check :size="12" /> APPROVED
-              </div>
-            </div>
-            <p class="text-sm text-slate-700 dark:text-slate-300" :class="{'line-clamp-2': !item.expanded}">"{{ item.review_text }}"</p>
-            <button v-if="item.review_text.length > 150" @click="item.expanded = !item.expanded" class="text-[10px] font-bold text-primary-500 mt-2 uppercase">{{ item.expanded ? 'Ciutkan' : 'Baca Selengkapnya' }}</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: REJECTED -->
-      <div v-if="activeTab === 'rejected'" class="space-y-4">
-        <h2 class="font-black text-2xl mb-4">Review Ditolak</h2>
-        <div v-if="rejectedReviews.length === 0" class="text-center py-20 opacity-50">Tidak ada review yang ditolak.</div>
-        <div v-else class="grid grid-cols-1 gap-4">
-          <div v-for="item in rejectedReviews" :key="item.id" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-red-100 dark:border-red-900/30">
-            <div class="flex flex-col md:flex-row justify-between gap-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <h4 class="font-bold text-red-600 dark:text-red-400">Tempat #{{ item.place_id }}</h4>
-                  <span class="px-2 py-0.5 bg-red-50 dark:bg-red-900/20 text-[10px] font-black text-red-600 rounded">REJECTED</span>
-                </div>
-                <div class="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-lg">
-                   <p class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wide">Alasan Penolakan:</p>
-                   <p class="text-xs text-red-600 dark:text-red-400 font-medium">{{ item.rejection_reason }}</p>
-                </div>
-                <p class="text-sm text-slate-600 dark:text-slate-400 italic">"{{ item.review_text }}"</p>
-              </div>
-              <div class="flex gap-2 shrink-0 h-fit">
-                <button @click="handleRestore(item.id)" class="px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 text-xs font-bold rounded-xl hover:bg-amber-200 transition-colors border border-amber-200">
-                  Pulihkan
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: PERMANENT DELETE -->
-      <div v-if="activeTab === 'permanent_delete'" class="space-y-4">
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl mb-6">
-          <div class="flex gap-3 items-center">
-            <AlertTriangle class="text-red-600" :size="32" />
-            <div>
-              <p class="font-black text-red-800 dark:text-red-400">Area Berbahaya</p>
-              <p class="text-xs text-red-700 dark:text-red-500">Review yang sudah dihapus permanen tidak bisa dikembalikan. Gunakan hanya untuk spam/konten terlarang.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-between items-center px-2">
-          <div class="flex items-center gap-3">
-             <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" />
-             <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase">Pilih Semua</span>
-          </div>
-          <button v-if="selectedIds.length > 0" @click="showConfirmDelete = true" class="px-6 py-2.5 bg-red-600 text-white text-xs font-black rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center gap-2">
-            <Trash2 :size="16" /> Hapus Permanen ({{ selectedIds.length }})
-          </button>
-        </div>
-
-        <div v-if="rejectedReviews.length === 0" class="text-center py-20 opacity-50 italic">Kosong. Reject review dulu untuk melihat daftar di sini.</div>
-        <div v-else class="grid grid-cols-1 gap-3">
-          <div v-for="item in rejectedReviews" :key="item.id" 
-            @click="toggleSelect(item.id)"
-            class="bg-white dark:bg-slate-800 p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-4"
-            :class="selectedIds.includes(item.id) ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/30' : 'border-slate-200 dark:border-slate-700 hover:border-red-300'">
-            <input type="checkbox" :checked="selectedIds.includes(item.id)" @click.stop class="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500" />
-            <div class="flex-1">
-              <div class="flex justify-between">
-                <span class="text-[10px] font-black text-slate-400">{{ item.id }}</span>
-                <span class="text-[10px] font-bold text-red-500">{{ item.rejection_reason }}</span>
-              </div>
-              <p class="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-1">"{{ item.review_text }}"</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: PARKING VERIFICATION -->
-      <div v-if="activeTab === 'parking'" class="space-y-6 max-w-2xl mx-auto">
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h2 class="font-black text-2xl mb-6 flex items-center gap-3">
-            <CircleParking :size="28" class="text-blue-500" /> Verifikasi Parkir Admin
-          </h2>
+      <!-- CONTENT AREA -->
+      <main class="flex-1 min-h-screen overflow-x-hidden">
+        <div class="max-w-6xl mx-auto p-4 md:p-8 lg:p-10 animate-fade-in" :key="activeTab">
           
-          <div class="flex gap-2 mb-8">
-            <div class="relative flex-1">
-              <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" :size="18" />
-              <input v-model="parkingPlaceId" @keyup.enter="searchParkingPlace" placeholder="Masukkan Place ID (Contoh: ChIJ...)" class="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all" />
+          <!-- TAB: DASHBOARD -->
+          <div v-if="activeTab === 'dashboard'" class="space-y-10">
+            <div class="flex items-end justify-between">
+              <div>
+                <h2 class="text-3xl font-black text-slate-900 dark:text-white">Dashboard</h2>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Ringkasan statistik sistem hari ini.</p>
+              </div>
+              <button @click="fetchData" class="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95">
+                <RefreshCw :size="20" :class="{'animate-spin': isLoading}" class="text-slate-500" />
+              </button>
             </div>
-            <button @click="searchParkingPlace" :disabled="isSearchingParking" class="px-8 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2">
-              <RefreshCw v-if="isSearchingParking" :size="18" class="animate-spin" />
-              <span v-else>Cari</span>
-            </button>
-          </div>
 
-          <div v-if="parkingInfo" class="space-y-8 animate-fade-in">
-            <!-- Place Info -->
-            <div class="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50">
-              <p class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">📍 Lokasi Ditemukan</p>
-              <h3 class="font-black text-xl text-slate-900 dark:text-white mb-1">{{ parkingInfo.name }}</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ parkingInfo.address }}</p>
-              
-              <div class="flex flex-wrap gap-4 pt-4 border-t border-blue-100 dark:border-blue-800/50">
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Badge Komunitas</p>
-                  <div v-if="parkingInfo.community_parking?.label_text" class="px-3 py-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-bold flex items-center gap-2">
-                    {{ parkingInfo.community_parking.label_text }}
-                    <span class="text-[10px] text-slate-400">({{ parkingInfo.community_parking.source_count }} laporan)</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div v-for="stat in statsCards" :key="stat.label" class="bg-white dark:bg-slate-800 p-7 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 group">
+                <div class="flex justify-between items-start mb-4">
+                  <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">{{ stat.label }}</p>
+                  <div class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center group-hover:bg-primary-500 transition-colors">
+                    <LayoutDashboard :size="14" class="group-hover:text-white" />
                   </div>
-                  <div v-else class="text-sm text-slate-400 italic">Belum ada laporan</div>
                 </div>
-                
-                <div v-if="parkingInfo.admin_parking">
-                  <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Badge Admin Aktif ✓</p>
-                  <div class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-sm font-black flex items-center gap-2 shadow-sm">
-                    {{ parkingInfo.admin_parking.label_icon }} {{ parkingInfo.admin_parking.label_text }}
-                  </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-4xl font-black" :class="stat.color">{{ stat.value }}</span>
+                  <span v-if="stat.subValue" class="text-[10px] text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">{{ stat.subValue }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Verification Form -->
-            <div class="space-y-4">
-              <h4 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck :size="18" class="text-emerald-500" /> Input Verifikasi Admin
-              </h4>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button v-for="type in parkingTypes" :key="type.id" 
-                  @click="selectedParkingType = type.id"
-                  class="p-4 rounded-2xl border-2 text-left transition-all flex items-center justify-between"
-                  :class="selectedParkingType === type.id 
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                    : 'border-slate-100 dark:border-slate-700 hover:border-blue-200'">
+            <!-- RECENT ACTIVITY -->
+            <div class="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+              <h3 class="font-black text-xl mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
+                <History :size="24" class="text-primary-500" /> Aktivitas Terbaru
+              </h3>
+              <div class="space-y-6">
+                <div v-if="isLoading" class="flex justify-center p-12"><RefreshCw class="animate-spin text-slate-400" :size="32" /></div>
+                <div v-else class="text-center py-16">
+                  <div class="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <ShieldCheck :size="32" class="text-slate-300" />
+                  </div>
+                  <p class="text-slate-400 font-bold italic">Pilih tab di samping untuk melakukan moderasi data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PENDING -->
+          <div v-if="activeTab === 'pending'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-3xl font-black text-slate-900 dark:text-white">Antrean Moderasi</h2>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Review baru yang butuh persetujuan admin.</p>
+              </div>
+              <button @click="fetchData" class="w-fit px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 font-bold text-sm">
+                <RefreshCw :size="18" :class="{'animate-spin': isLoading}" /> Refresh
+              </button>
+            </div>
+
+            <div v-if="queue.length === 0" class="bg-white dark:bg-slate-800 p-20 rounded-[3rem] text-center border-2 border-dashed border-slate-100 dark:border-slate-700 shadow-sm">
+              <div class="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-8">
+                <CheckCircle2 :size="48" class="text-emerald-400" />
+              </div>
+              <h3 class="text-2xl font-black mb-2">Semua Bersih!</h3>
+              <p class="text-slate-500 max-w-xs mx-auto font-medium">Belum ada review baru yang masuk untuk dimoderasi hari ini.</p>
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-for="item in queue" :key="item.id" class="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all">
+                <div class="flex justify-between items-start mb-6">
                   <div class="flex items-center gap-3">
-                    <span class="text-xl">{{ type.icon }}</span>
-                    <span class="text-sm font-bold" :class="selectedParkingType === type.id ? 'text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'">{{ type.label }}</span>
-                  </div>
-                  <CheckCircle2 v-if="selectedParkingType === type.id" :size="20" class="text-blue-500" />
-                </button>
-              </div>
-
-              <div>
-                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Catatan Admin (Opsional)</label>
-                <textarea v-model="adminParkingNotes" placeholder="Contoh: Hasil survey lapangan 9 Mei 2026..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"></textarea>
-              </div>
-
-              <div class="flex gap-3 pt-2">
-                <button @click="saveAdminParking" :disabled="isSavingParking" class="flex-1 py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 disabled:opacity-50">
-                  <RefreshCw v-if="isSavingParking" :size="20" class="animate-spin" />
-                  Simpan Verifikasi Admin
-                </button>
-                <button v-if="parkingInfo.admin_parking" @click="removeAdminParking" :disabled="isSavingParking" class="px-6 py-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 border border-red-200 transition-all flex items-center justify-center gap-2">
-                  <Trash2 :size="20" />
-                </button>
-              </div>
-            </div>
-
-            <!-- History -->
-            <div v-if="parkingHistory.length > 0" class="pt-6 border-t border-slate-100 dark:border-slate-700">
-              <h4 class="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <History :size="18" class="text-slate-400" /> Riwayat Verifikasi Admin
-              </h4>
-              <div class="space-y-3">
-                <div v-for="(log, idx) in parkingHistory" :key="idx" class="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
-                  <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm shrink-0">
-                    <Info v-if="log.action === 'ADMIN_PARKING_UNVERIFY'" :size="14" class="text-red-500" />
-                    <Check v-else :size="14" class="text-emerald-500" />
-                  </div>
-                  <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                      <span class="text-xs font-black text-slate-700 dark:text-slate-300">
-                        {{ log.action === 'ADMIN_PARKING_UNVERIFY' ? 'Verifikasi Dihapus' : 'Verifikasi Diperbarui' }}
-                      </span>
-                      <span class="text-[10px] text-slate-400">• {{ formatTime(log.timestamp) }}</span>
+                    <div class="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-slate-400 font-black text-xs">
+                      {{ item.id.slice(-4) }}
                     </div>
-                    <p class="text-[10px] text-slate-500 font-medium">Oleh: {{ log.admin_email }}</p>
-                    <p v-if="log.parking_type" class="text-[11px] font-bold text-blue-600 mt-1 uppercase tracking-tight">Kategori: {{ log.parking_type.replace('_', ' ') }}</p>
+                    <div>
+                      <h4 class="font-black text-slate-900 dark:text-white text-sm">Tempat #{{ item.place_id.slice(0, 8) }}...</h4>
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ formatTime(item.created_at) }}</p>
+                    </div>
                   </div>
+                  <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-full text-[10px] font-black">
+                    <Star :size="12" class="fill-amber-600" /> {{ item.rating }}
+                  </div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl mb-6 min-h-[100px]">
+                  <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">"{{ item.review_text }}"</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <button @click="openDetail(item)" class="py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest">Detail</button>
+                  <button @click="openReject(item)" class="py-3.5 bg-red-50 dark:bg-red-900/20 text-red-600 text-[10px] font-black rounded-2xl hover:bg-red-100 transition-all border border-red-100 dark:border-red-900/50 uppercase tracking-widest">Tolak</button>
+                  <button @click="handleApprove(item.id)" :disabled="processingId === item.id" class="py-3.5 bg-emerald-500 text-white text-[10px] font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 uppercase tracking-widest flex items-center justify-center gap-2">
+                    <RefreshCw v-if="processingId === item.id" :size="12" class="animate-spin" />
+                    <span v-else>Setujui</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-          
-          <div v-else-if="!isSearchingParking" class="py-20 text-center opacity-40">
-            <CircleParking :size="64" class="mx-auto mb-4" />
-            <p class="font-bold">Cari Place ID untuk memulai verifikasi</p>
-          </div>
-        </div>
-      </div>
 
-    </main>
+          <!-- TAB: APPROVED -->
+          <div v-if="activeTab === 'approved'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <h2 class="text-3xl font-black text-slate-900 dark:text-white">Review Disetujui</h2>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Ulasan yang sudah dipublikasikan ke publik.</p>
+              </div>
+              <div class="flex items-center gap-3">
+                 <input type="date" v-model="filterDate" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-sm" />
+                 <button @click="fetchApproved" class="p-3.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 active:scale-90 transition-all">
+                    <RefreshCw :size="20" :class="{'animate-spin': isFetchingApproved}" />
+                 </button>
+              </div>
+            </div>
+
+            <div v-if="approvedReviews.length === 0" class="text-center py-32 opacity-40 grayscale italic font-bold">
+               <CheckCircle2 :size="64" class="mx-auto mb-4" />
+               Belum ada review yang disetujui.
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-for="item in filteredApproved" :key="item.id" class="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-emerald-900/30 shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                   <CheckCircle :size="48" class="text-emerald-500" />
+                </div>
+                <div class="flex justify-between items-start mb-6">
+                  <div>
+                    <h4 class="font-black text-emerald-600 dark:text-emerald-400 text-lg">Tempat #{{ item.place_id.slice(0, 8) }}</h4>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      <Calendar :size="12" /> {{ formatTime(item.approved_at || item.updated_at) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl mb-2">
+                  <p class="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed" :class="{'line-clamp-3': !item.expanded}">"{{ item.review_text }}"</p>
+                </div>
+                <button v-if="item.review_text.length > 150" @click="item.expanded = !item.expanded" class="text-[10px] font-black text-primary-500 mt-2 uppercase tracking-widest ml-1">{{ item.expanded ? 'Ciutkan' : 'Baca Selengkapnya' }}</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: REJECTED -->
+          <div v-if="activeTab === 'rejected'" class="space-y-6">
+            <div>
+              <h2 class="text-3xl font-black text-slate-900 dark:text-white">Review Ditolak</h2>
+              <p class="text-slate-500 dark:text-slate-400 font-medium">Ulasan yang tidak lolos kriteria moderasi.</p>
+            </div>
+
+            <div v-if="rejectedReviews.length === 0" class="text-center py-32 opacity-40 italic font-bold">
+               <XCircle :size="64" class="mx-auto mb-4" />
+               Tidak ada review yang ditolak.
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-for="item in rejectedReviews" :key="item.id" class="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-red-50 dark:border-red-900/30 shadow-sm">
+                <div class="flex justify-between items-start mb-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center text-red-400">
+                      <XCircle :size="20" />
+                    </div>
+                    <div>
+                      <h4 class="font-black text-red-600 dark:text-red-400">Tempat #{{ item.place_id.slice(0, 8) }}</h4>
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Ditolak oleh Admin</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-5 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-2xl">
+                   <p class="text-[10px] font-black text-red-800 dark:text-red-400 uppercase tracking-widest mb-1.5">Alasan Penolakan:</p>
+                   <p class="text-xs text-red-600 dark:text-red-300 font-bold">{{ item.rejection_reason }}</p>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 italic mb-6">"{{ item.review_text }}"</p>
+                <button @click="handleRestore(item.id)" class="w-full py-3.5 bg-amber-500 text-white text-[10px] font-black rounded-2xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 uppercase tracking-widest">
+                  Pulihkan ke Antrean
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PERMANENT DELETE -->
+          <div v-if="activeTab === 'permanent_delete'" class="space-y-8">
+            <div class="bg-red-600 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-red-500/30 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+               <AlertTriangle class="w-20 h-20 opacity-20 absolute -right-4 -bottom-4 rotate-12" />
+               <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-[1.5rem] flex items-center justify-center shrink-0">
+                 <Trash2 :size="40" />
+               </div>
+               <div>
+                 <h2 class="text-3xl font-black mb-2 leading-tight">Area Berbahaya</h2>
+                 <p class="text-red-100 font-medium">Ulasan yang dihapus permanen tidak dapat dikembalikan. Gunakan fitur ini hanya untuk spam atau konten yang benar-benar terlarang.</p>
+               </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+              <label class="flex items-center gap-4 cursor-pointer group">
+                 <div class="relative">
+                    <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="peer sr-only" />
+                    <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded-lg peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center">
+                       <Check :size="14" class="text-white scale-0 peer-checked:scale-100 transition-transform" />
+                    </div>
+                 </div>
+                 <span class="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Pilih Semua ({{ rejectedReviews.length }})</span>
+              </label>
+              <button v-if="selectedIds.length > 0" @click="showConfirmDelete = true" class="w-full sm:w-fit px-8 py-4 bg-red-600 text-white text-[11px] font-black rounded-2xl hover:bg-red-700 shadow-xl shadow-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest animate-fade-in">
+                <Trash2 :size="18" /> Hapus Permanen ({{ selectedIds.length }})
+              </button>
+            </div>
+
+            <div v-if="rejectedReviews.length === 0" class="text-center py-32 opacity-40 italic font-bold">Daftar kosong. Review yang ditolak akan muncul di sini.</div>
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div v-for="item in rejectedReviews" :key="item.id" 
+                @click="toggleSelect(item.id)"
+                class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border-2 transition-all cursor-pointer group relative"
+                :class="selectedIds.includes(item.id) ? 'border-red-500 shadow-xl shadow-red-500/10' : 'border-slate-100 dark:border-slate-700 hover:border-red-200'">
+                <div class="absolute top-4 right-4 w-6 h-6 border-2 rounded-lg transition-all flex items-center justify-center"
+                   :class="selectedIds.includes(item.id) ? 'bg-red-500 border-red-500' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-600 group-hover:border-red-400'">
+                   <Check v-if="selectedIds.includes(item.id)" :size="14" class="text-white" />
+                </div>
+                <div class="mb-4">
+                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">ID: {{ item.id.slice(-6) }}</span>
+                  <span class="text-xs font-black text-red-500">{{ item.rejection_reason }}</span>
+                </div>
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic line-clamp-2 group-hover:line-clamp-none transition-all">"{{ item.review_text }}"</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PARKING VERIFICATION -->
+          <div v-if="activeTab === 'parking'" class="space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-4">
+              <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-[1.5rem] flex items-center justify-center mx-auto text-blue-500 shadow-lg shadow-blue-500/10">
+                 <CircleParking :size="40" />
+              </div>
+              <h2 class="text-4xl font-black text-slate-900 dark:text-white">Verifikasi Parkir Admin</h2>
+              <p class="text-slate-500 dark:text-slate-400 font-medium">Lakukan survey lapangan atau verifikasi manual untuk memberikan lencana resmi pada lokasi tertentu.</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-xl max-w-3xl mx-auto">
+              <div class="flex flex-col md:flex-row gap-3 mb-12">
+                <div class="relative flex-1 group">
+                  <Search class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" :size="20" />
+                  <input v-model="parkingPlaceId" @keyup.enter="searchParkingPlace" placeholder="Masukkan Place ID (Contoh: ChIJ...)" class="w-full pl-14 pr-6 py-5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-3xl outline-none focus:ring-4 focus:ring-blue-500/10 font-bold transition-all" />
+                </div>
+                <button @click="searchParkingPlace" :disabled="isSearchingParking" class="px-10 py-5 bg-blue-600 text-white font-black rounded-3xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
+                  <RefreshCw v-if="isSearchingParking" :size="20" class="animate-spin" />
+                  <span v-else>Cari Lokasi</span>
+                </button>
+              </div>
+
+              <div v-if="parkingInfo" class="space-y-12 animate-fade-in">
+                <!-- Place Info Card -->
+                <div class="p-8 bg-blue-50 dark:bg-blue-900/20 rounded-[2.5rem] border border-blue-100 dark:border-blue-800/30 relative overflow-hidden">
+                  <div class="absolute -right-6 -bottom-6 opacity-5 rotate-12">
+                     <CircleParking :size="120" class="text-blue-500" />
+                  </div>
+                  <div class="relative z-10">
+                    <p class="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span> Lokasi Terdeteksi
+                    </p>
+                    <h3 class="font-black text-2xl text-slate-900 dark:text-white mb-2 leading-tight">{{ parkingInfo.name }}</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">{{ parkingInfo.address }}</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-6 pt-8 border-t border-blue-100 dark:border-blue-800/50">
+                      <div class="flex-1">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Badge Komunitas Saat Ini</p>
+                        <div v-if="parkingInfo.community_parking?.label_text" class="inline-flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                          <span class="text-sm font-black text-slate-700 dark:text-slate-200">{{ parkingInfo.community_parking.label_text }}</span>
+                          <span class="text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded-full">{{ parkingInfo.community_parking.source_count }} Laporkan</span>
+                        </div>
+                        <div v-else class="text-sm text-slate-400 italic font-medium">Belum ada laporan dari komunitas.</div>
+                      </div>
+                      
+                      <div v-if="parkingInfo.admin_parking" class="flex-1">
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3">Verified Admin Aktif ✓</p>
+                        <div class="inline-flex items-center gap-3 px-5 py-2.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/30">
+                          <span class="text-lg">{{ parkingInfo.admin_parking.label_icon }}</span>
+                          <span class="text-sm font-black uppercase tracking-tight">{{ parkingInfo.admin_parking.label_text }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form Section -->
+                <div class="space-y-8">
+                  <div class="flex items-center gap-3">
+                     <ShieldCheck :size="24" class="text-emerald-500" />
+                     <h4 class="font-black text-xl text-slate-900 dark:text-white">Panel Verifikasi</h4>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button v-for="type in parkingTypes" :key="type.id" 
+                      @click="selectedParkingType = type.id"
+                      class="group p-6 rounded-[2rem] border-2 text-left transition-all flex items-center justify-between"
+                      :class="selectedParkingType === type.id 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-500/10' 
+                        : 'border-slate-50 dark:border-slate-700 hover:border-blue-200'">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all"
+                          :class="selectedParkingType === type.id ? 'bg-white dark:bg-slate-800 shadow-sm' : 'bg-slate-50 dark:bg-slate-900 group-hover:scale-110'">
+                          {{ type.icon }}
+                        </div>
+                        <span class="text-sm font-black" :class="selectedParkingType === type.id ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700'">{{ type.label }}</span>
+                      </div>
+                      <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                         :class="selectedParkingType === type.id ? 'bg-blue-500 border-blue-500' : 'border-slate-200 dark:border-slate-600'">
+                         <Check v-if="selectedParkingType === type.id" :size="14" class="text-white" />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Catatan Verifikasi (Tampil di Detail)</label>
+                    <textarea v-model="adminParkingNotes" placeholder="Jelaskan alasan verifikasi ini (misal: survey lapangan 2026, kerja sama resmi, dll)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-[2rem] p-6 text-sm font-medium outline-none focus:ring-4 focus:ring-blue-500/10 min-h-[140px] leading-relaxed transition-all"></textarea>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button @click="saveAdminParking" :disabled="isSavingParking" class="flex-1 py-5 bg-emerald-500 text-white font-black rounded-3xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95">
+                      <RefreshCw v-if="isSavingParking" :size="22" class="animate-spin" />
+                      <CheckCircle v-else :size="22" />
+                      Simpan Lencana Verifikasi
+                    </button>
+                    <button v-if="parkingInfo.admin_parking" @click="removeAdminParking" :disabled="isSavingParking" class="px-8 py-5 bg-red-50 text-red-600 font-black rounded-3xl hover:bg-red-100 border border-red-100 transition-all flex items-center justify-center gap-3 active:scale-95">
+                      <Trash2 :size="22" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- History Audit -->
+                <div v-if="parkingHistory.length > 0" class="pt-12 border-t-2 border-dashed border-slate-100 dark:border-slate-700">
+                  <div class="flex items-center gap-3 mb-8">
+                     <History :size="24" class="text-slate-400" />
+                     <h4 class="font-black text-xl text-slate-900 dark:text-white">Log Aktivitas Verifikasi</h4>
+                  </div>
+                  <div class="space-y-4">
+                    <div v-for="(log, idx) in parkingHistory" :key="idx" class="flex items-start gap-5 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
+                      <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm shrink-0">
+                        <Info v-if="log.action === 'ADMIN_PARKING_UNVERIFY'" :size="20" class="text-red-500" />
+                        <CheckCircle v-else :size="20" class="text-emerald-500" />
+                      </div>
+                      <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1.5">
+                          <span class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">
+                            {{ log.action === 'ADMIN_PARKING_UNVERIFY' ? 'Verifikasi Dihapus' : 'Verifikasi Diperbarui' }}
+                          </span>
+                          <span class="text-[10px] font-bold text-slate-400">{{ formatTime(log.timestamp) }}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 font-bold mb-2">Admin: <span class="text-slate-900 dark:text-slate-300">{{ log.admin_email }}</span></p>
+                        <p v-if="log.parking_type" class="text-[11px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full w-fit uppercase tracking-tighter">Kategori: {{ log.parking_type.replace('_', ' ') }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-else-if="!isSearchingParking" class="py-24 text-center opacity-40 grayscale group">
+                <div class="relative inline-block mb-8">
+                   <CircleParking :size="100" class="mx-auto text-slate-300 group-hover:text-blue-400 transition-colors duration-700" />
+                   <Search :size="32" class="absolute -bottom-2 -right-2 text-slate-400" />
+                </div>
+                <p class="font-black text-xl text-slate-400 uppercase tracking-[0.25em]">Cari Lokasi Untuk Verifikasi</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
 
     <!-- REJECT MODAL -->
-    <div v-if="rejectModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md p-8 shadow-2xl animate-fade-in border border-slate-200 dark:border-slate-700">
-        <h3 class="font-black text-2xl mb-2 text-red-600 flex items-center gap-3"><XCircle :size="28"/> Tolak Review</h3>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Kenapa review ini tidak layak diteruskan ke AI?</p>
+    <div v-if="rejectModal.show" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+      <div class="bg-white dark:bg-slate-800 rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-fade-in border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-40 h-40 bg-red-500/5 rounded-full"></div>
         
-        <div class="space-y-3 mb-6">
+        <h3 class="font-black text-3xl mb-3 text-red-600 flex items-center gap-4"><XCircle :size="36"/> Tolak Review</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-bold mb-8 uppercase tracking-widest">Alasan penolakan moderasi</p>
+        
+        <div class="space-y-3 mb-10">
            <button v-for="opt in rejectionOptions" :key="opt" 
              @click="rejectModal.reason = opt"
-             class="w-full p-4 rounded-2xl border-2 text-left text-sm font-bold transition-all flex items-center justify-between"
-             :class="rejectModal.reason === opt ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-100 dark:border-slate-700 hover:border-red-200'">
+             class="w-full p-5 rounded-[1.5rem] border-2 text-left text-sm font-black transition-all flex items-center justify-between"
+             :class="rejectModal.reason === opt ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-50 dark:border-slate-700 hover:border-red-200'">
              {{ opt }}
-             <CheckCircle2 v-if="rejectModal.reason === opt" :size="18" />
+             <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                :class="rejectModal.reason === opt ? 'bg-red-500 border-red-500' : 'border-slate-200 dark:border-slate-600'">
+                <Check v-if="rejectModal.reason === opt" :size="14" class="text-white" />
+             </div>
            </button>
         </div>
         
-        <textarea v-if="rejectModal.reason === 'Alasan lainnya...'" v-model="rejectModal.customReason" placeholder="Ketik alasan spesifik..." rows="3" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-sm mb-6 outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"></textarea>
+        <textarea v-if="rejectModal.reason === 'Alasan lainnya...'" v-model="rejectModal.customReason" placeholder="Tuliskan alasan spesifik kamu di sini..." rows="3" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl p-5 text-sm mb-10 outline-none focus:ring-4 focus:ring-red-500/10 text-slate-900 dark:text-white font-bold"></textarea>
 
-        <div class="grid grid-cols-2 gap-3">
-          <button @click="rejectModal.show = false" class="py-4 text-sm font-black text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors">Batal</button>
-          <button @click="submitReject" :disabled="processingId !== null" class="py-4 text-sm font-black bg-red-500 text-white rounded-2xl hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
-            <RefreshCw v-if="processingId !== null" :size="18" class="animate-spin" /> Tolak Review
+        <div class="grid grid-cols-2 gap-4">
+          <button @click="rejectModal.show = false" class="py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl transition-all">Batal</button>
+          <button @click="submitReject" :disabled="processingId !== null" class="py-5 text-xs font-black bg-red-600 text-white rounded-2xl hover:bg-red-700 shadow-xl shadow-red-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 uppercase tracking-widest">
+            <RefreshCw v-if="processingId !== null" :size="14" class="animate-spin" /> Tolak Sekarang
           </button>
         </div>
       </div>
     </div>
 
     <!-- DETAIL MODAL -->
-    <div v-if="detailModal.show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg p-0 shadow-2xl animate-fade-in overflow-hidden border border-slate-200 dark:border-slate-700">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
-          <h3 class="font-black text-xl text-slate-900 dark:text-white flex items-center gap-2"><Eye :size="24" class="text-primary-500"/> Detail Review</h3>
-          <button @click="detailModal.show = false" class="p-2 text-slate-400 hover:text-slate-600 bg-white dark:bg-slate-700 rounded-full"><X :size="20"/></button>
+    <div v-if="detailModal.show" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-[3.5rem] w-full max-w-2xl p-0 shadow-2xl animate-fade-in overflow-hidden border border-slate-100 dark:border-slate-700">
+        <div class="p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/80 backdrop-blur-xl">
+          <h3 class="font-black text-2xl text-slate-900 dark:text-white flex items-center gap-4"><Eye :size="28" class="text-primary-500"/> Detail Review</h3>
+          <button @click="detailModal.show = false" class="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-slate-600 bg-white dark:bg-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-90"><X :size="24"/></button>
         </div>
-        <div class="p-8">
-          <div class="grid grid-cols-2 gap-6 mb-8">
-            <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Place ID</p>
-              <p class="text-sm font-bold text-slate-900 dark:text-white">{{ detailModal.item.place_id }}</p>
+        <div class="p-10">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 transition-all hover:border-primary-500/30">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Place ID</p>
+              <p class="text-xs font-black text-slate-900 dark:text-white truncate">{{ detailModal.item.place_id }}</p>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">User ID</p>
-              <p class="text-sm font-bold text-slate-900 dark:text-white truncate">{{ detailModal.item.user_id }}</p>
+            <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 transition-all hover:border-primary-500/30">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">User ID</p>
+              <p class="text-xs font-black text-slate-900 dark:text-white truncate">{{ detailModal.item.user_id.slice(0, 10) }}...</p>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rating</p>
-              <div class="flex items-center gap-1 text-sm font-black text-amber-500"><Star :size="16" class="fill-amber-500"/> {{ detailModal.item.rating }}</div>
+            <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 transition-all hover:border-primary-500/30">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Rating</p>
+              <div class="flex items-center gap-1.5 text-xs font-black text-amber-500"><Star :size="16" class="fill-amber-500"/> {{ detailModal.item.rating }}</div>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tanggal</p>
-              <p class="text-sm font-bold text-slate-900 dark:text-white">{{ new Date(detailModal.item.created_at).toLocaleDateString('id-ID') }}</p>
+            <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 transition-all hover:border-primary-500/30">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Tanggal</p>
+              <p class="text-xs font-black text-slate-900 dark:text-white">{{ new Date(detailModal.item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</p>
             </div>
           </div>
-          <div class="mb-8 bg-slate-900 text-emerald-50 p-6 rounded-3xl border-2 border-emerald-500/20 shadow-inner">
-            <div class="flex items-center gap-2 mb-3 text-emerald-400">
-               <Quote :size="20" />
-               <span class="text-[10px] font-black uppercase tracking-widest">Review Content</span>
+          
+          <div class="mb-10 bg-slate-900 text-emerald-50 p-10 rounded-[3rem] border-2 border-emerald-500/20 shadow-2xl relative">
+            <Quote class="absolute -top-4 -left-4 w-12 h-12 text-emerald-500 opacity-20" />
+            <div class="flex items-center gap-3 mb-6 text-emerald-400">
+               <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+               <span class="text-[10px] font-black uppercase tracking-[0.3em]">Isi Review Pengguna</span>
             </div>
-            <p class="text-base leading-relaxed font-medium italic">"{{ detailModal.item.review_text }}"</p>
+            <p class="text-xl leading-relaxed font-bold italic opacity-90">"{{ detailModal.item.review_text }}"</p>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <button @click="handleApprove(detailModal.item.id); detailModal.show = false" class="py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-2">
-              <CheckCircle :size="20"/> Setujui
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button @click="handleApprove(detailModal.item.id); detailModal.show = false" class="flex-1 py-5 bg-emerald-500 text-white font-black rounded-3xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-3">
+              <CheckCircle :size="24"/> Setujui & Publikasikan
             </button>
-            <button @click="openReject(detailModal.item); detailModal.show = false" class="py-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-100 transition-all border border-red-200 active:scale-95 flex items-center justify-center gap-2">
-              <XCircle :size="20"/> Tolak
+            <button @click="openReject(detailModal.item); detailModal.show = false" class="py-5 px-10 bg-red-50 text-red-600 font-black rounded-3xl hover:bg-red-100 transition-all border border-red-100 active:scale-95 flex items-center justify-center gap-3">
+              <XCircle :size="24"/> Tolak Review
             </button>
           </div>
         </div>
@@ -391,34 +553,37 @@
     </div>
 
     <!-- PERMANENT DELETE CONFIRM MODAL -->
-    <div v-if="showConfirmDelete" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-8 shadow-2xl text-center border-4 border-red-500 animate-pulse-once">
-        <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Trash2 :size="40" />
+    <div v-if="showConfirmDelete" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[150] flex items-center justify-center p-6">
+      <div class="bg-white dark:bg-slate-800 rounded-[3.5rem] w-full max-w-sm p-12 shadow-2xl text-center border-4 border-red-600/20 animate-bounce-once">
+        <div class="w-24 h-24 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-red-500/10">
+          <Trash2 :size="48" />
         </div>
-        <h3 class="font-black text-2xl mb-4 text-red-600">Hapus Permanen?</h3>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-          Kamu akan menghapus <span class="font-black text-red-600">{{ selectedIds.length }} review</span> secara permanen dari database.
+        <h3 class="font-black text-3xl mb-4 text-red-600 leading-tight">Yakin Hapus Permanen?</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-10 leading-relaxed font-bold">
+          Kamu akan menghapus <span class="text-red-600 px-2 py-0.5 bg-red-50 rounded-lg">{{ selectedIds.length }} review</span> selamanya. 
           <br><br>
-          <span class="font-bold uppercase text-xs tracking-widest text-red-500">Tindakan ini TIDAK DAPAT DIBATALKAN!</span>
+          <span class="text-[10px] uppercase tracking-[0.2em] text-red-500 bg-red-50 px-3 py-1 rounded-full">Tindakan ini tidak bisa dibatalkan!</span>
         </p>
-        <div class="grid grid-cols-2 gap-3">
-           <button @click="showConfirmDelete = false" class="py-4 text-sm font-black text-slate-500 bg-slate-100 dark:bg-slate-700 rounded-2xl hover:bg-slate-200">Batal</button>
-           <button @click="handlePermanentDelete" :disabled="isDeleting" class="py-4 text-sm font-black bg-red-600 text-white rounded-2xl hover:bg-red-700 shadow-xl shadow-red-500/40 flex items-center justify-center gap-2 disabled:opacity-50">
-             <RefreshCw v-if="isDeleting" :size="18" class="animate-spin" /> Yakin, Hapus!
+        <div class="flex flex-col gap-3">
+           <button @click="handlePermanentDelete" :disabled="isDeleting" class="py-5 text-sm font-black bg-red-600 text-white rounded-[1.5rem] hover:bg-red-700 shadow-2xl shadow-red-600/40 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 transition-all">
+             <RefreshCw v-if="isDeleting" :size="20" class="animate-spin" /> YAKIN, HAPUS SEKARANG!
            </button>
+           <button @click="showConfirmDelete = false" class="py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl">Batal</button>
         </div>
       </div>
     </div>
 
     <!-- GLOBAL TOAST -->
-    <div class="fixed bottom-6 right-6 z-[100] transition-all duration-500 pointer-events-none" :class="toast.show ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-90'">
-      <div class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 text-sm font-black border border-slate-700 dark:border-slate-100">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" :class="toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'">
-          <CheckCircle v-if="toast.type === 'success'" :size="20" />
-          <AlertTriangle v-else :size="20" />
+    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 md:left-auto md:right-10 md:translate-x-0 z-[200] transition-all duration-700 pointer-events-none" :class="toast.show ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-20 opacity-0 scale-90'">
+      <div class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-5 text-sm font-black border border-slate-700 dark:border-slate-100">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-lg" :class="toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-red-500 text-white shadow-red-500/20'">
+          <CheckCircle v-if="toast.type === 'success'" :size="24" />
+          <AlertTriangle v-else :size="24" />
         </div>
-        {{ toast.message }}
+        <div class="flex flex-col">
+           <span class="text-[10px] uppercase tracking-widest opacity-50 mb-0.5">{{ toast.type === 'success' ? 'Berhasil' : 'Peringatan' }}</span>
+           <span class="text-lg leading-none">{{ toast.message }}</span>
+        </div>
       </div>
     </div>
 
@@ -430,6 +595,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { 
+  getAdminDashboard, 
+  getModerationQueue, 
+  getApprovedReviews, 
+  getRejectedReviews, 
+  approveReview, 
+  rejectReview, 
   restoreReview, 
   deletePermanentReviews,
   getParkingHistory,
@@ -440,14 +611,15 @@ import {
 import { 
   ShieldCheck, AlertCircle, ListChecks, CheckCircle, RefreshCw, Star, XCircle, 
   Eye, X, LayoutDashboard, History, CheckCircle2, Calendar, Check, 
-  Trash2, AlertTriangle, Quote, Clock, CircleParking, Search, Info
+  Trash2, AlertTriangle, Quote, Clock, CircleParking, Search, Info, LogOut
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-// TABS SYSTEM
+// NAVIGATION
 const activeTab = ref('dashboard')
+const mobileMenuOpen = ref(false)
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'pending', label: 'Pending', icon: Clock },
@@ -723,8 +895,15 @@ onMounted(() => {
 <style scoped>
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.animate-fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide-enter-active, .slide-leave-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-enter-from, .slide-leave-to { transform: translateX(-100%); opacity: 0; }
+
 .animate-pulse-once { animation: pulse 1.5s ease-out; }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+.animate-bounce-once { animation: bounceCustom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes bounceCustom { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 </style>
