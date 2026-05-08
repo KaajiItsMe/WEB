@@ -97,10 +97,9 @@ Berbeda dengan Google Maps yang bersifat publik, LokaLens menyediakan wadah untu
 
 LokaLens dilengkapi dengan sistem caching tingkat lanjut untuk meminimalkan biaya API:
 - **Grid-Based Caching:** Caching hasil pencarian berdasarkan grid 1km untuk menghindari redundant API calls saat GPS bergeser sedikit.
-- **Analysis Cache:** Hasil analisis AI disimpan selama 30 hari di Firestore.
+- **Smart Analysis Cache:** Hasil analisis AI disimpan di Firestore dengan **Smart Validation**. Jika dokumen cache ditemukan tidak lengkap (misalnya Red Flag atau data lokasi hilang), sistem secara otomatis memicu re-analisis untuk menjamin kualitas data.
+- **Response Normalization:** Menjamin frontend selalu menerima data yang konsisten (string kosong atau array default) meskipun dokumen cache berasal dari versi database lama.
 - **Request Debouncing:** Mencegah spam request saat user mengetik di kolom pencarian.
-- **Parking Batch API:** Satu API call untuk mengambil info parkir banyak tempat sekaligus.
-- **Model Fallback:** Gemini 2.5 Flash → Flash Lite → Flash Latest (auto-retry dengan exponential backoff).
 
 ---
 
@@ -138,9 +137,11 @@ FIREBASE_CLIENT_EMAIL="firebase-adminsdk-...@lokalens-web.iam.gserviceaccount.co
 ```
 
 ```bash
+# Untuk menjalankan lokal
 npm run dev
-# atau
-node index.js
+
+# Untuk deploy ke Google Cloud Run
+gcloud run deploy lokalens-backend --source . --region asia-southeast2
 ```
 
 ### 3. Frontend (Client)
