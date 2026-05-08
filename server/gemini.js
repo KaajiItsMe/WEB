@@ -38,6 +38,7 @@ Parkir adalah salah satu faktor PALING PENTING bagi pengguna LokaLens. Kamu WAJI
 - Jika ragu, lebih baik netral daripada salah
 
 ## ATURAN PENTING & FORMAT OUTPUT (WAJIB DIIKUTI 100%)
+- **red_flag**: WAJIB diisi! Jika review menyebutkan keluhan (pelayanan buruk, kasir julid, parkir susah, harga tidak sesuai, dll), tuliskan sebagai peringatan jujur. Contoh: "Beberapa kasir kurang ramah dan suka julid". Jika TIDAK ada keluhan sama sekali, isi dengan string kosong "".
 - Selalu jujur — red flag WAJIB diisi jika ada kekurangan
 - Review private lebih dipercaya — data internal lebih jujur daripada review publik
 - Bahasa natural — pakai bahasa gaul Indonesia yang friendly
@@ -190,7 +191,7 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
 
     // POST-PROCESSING SANITIZER TO GUARANTEE FORMAT
     const validColors = ["green", "red", "amber", "blue", "purple", "teal", "indigo"]
-    
+
     if (Array.isArray(result.tags)) {
       result.tags = result.tags.slice(0, 3)
     }
@@ -206,6 +207,24 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
 
     while (result.tag_colors.length < (result.tags?.length || 0)) {
       result.tag_colors.push(validColors[result.tag_colors.length % validColors.length])
+    }
+
+    // 🔥 RED FLAG FALLBACK (If Gemini misses it but reviews contain clear negatives)
+    if (!result.red_flag && placeInput.reviews?.length > 0) {
+      const negativeKeywords = [
+        { word: 'julid', label: 'Pelayanan kasir kurang ramah / julid' },
+        { word: 'kasir', label: 'Ada keluhan terkait pelayanan kasir' },
+        { word: 'buruk', label: 'Pelayanan dinilai kurang memuaskan' },
+        { word: 'mahal', label: 'Harga dinilai terlalu mahal' },
+        { word: 'lambat', label: 'Pelayanan cenderung lambat' },
+        { word: 'kotor', label: 'Kebersihan tempat kurang terjaga' }
+      ]
+      
+      const allReviews = placeInput.reviews.join(' ').toLowerCase()
+      const match = negativeKeywords.find(k => allReviews.includes(k.word))
+      if (match) {
+        result.red_flag = match.label
+      }
     }
 
     if (result.best_time && !/\d/.test(result.best_time)) {
@@ -225,8 +244,8 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
 
     // FICTIONAL NAMES FOR COMMUNITY UPDATES (Privacy Friendly)
     const randomNames = [
-      "Giant Elephant", "Fly Kitty", "Sleepy Panda", "Golden Eagle", "Brave Lion", 
-      "Silver Fox", "Mystic Dragon", "Happy Hippo", "Blue Whale", "Green Turtle", 
+      "Giant Elephant", "Fly Kitty", "Sleepy Panda", "Golden Eagle", "Brave Lion",
+      "Silver Fox", "Mystic Dragon", "Happy Hippo", "Blue Whale", "Green Turtle",
       "Fast Rabbit", "Wise Owl", "Red Panda", "Arctic Wolf", "Neon Tiger",
       "Cat Cat", "Road Runner", "Ant Ant", "Chubby Bear", "Lazy Dog", "Crazy Frog"
     ]
@@ -260,16 +279,16 @@ export const analyzePlace = async (placeInput, retries = 3, delayMs = 1000) => {
     return result
   } catch (error) {
     const isRetryable = error.status === 503 || error.status === 429 || error.message.includes('fetch failed')
-    
+
     if (isRetryable && retries > 0) {
       const attempt = 4 - retries
       const waitTime = delayMs * attempt // 1000, 2000, 3000
-      console.error(`[AI] Error: ${error.message}. Retrying in ${waitTime/1000}s... (${retries} attempts left)`)
-      
+      console.error(`[AI] Error: ${error.message}. Retrying in ${waitTime / 1000}s... (${retries} attempts left)`)
+
       await new Promise(resolve => setTimeout(resolve, waitTime))
       return await analyzePlace(placeInput, retries - 1, delayMs)
     }
-    
+
     console.error('[AI] Final Error:', error.message)
     throw error
   }
