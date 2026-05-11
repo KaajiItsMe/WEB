@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen w-full max-w-full overflow-hidden bg-background-light dark:bg-background-dark flex flex-col"
+  <div class="min-h-screen w-full bg-background-light dark:bg-background-dark pb-28 md:pb-8 pt-4 md:pt-8"
        @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
     
     <!-- PULL TO REFRESH INDICATOR -->
@@ -11,73 +11,72 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-8 pb-32 pt-4 md:pt-8">
-      <div class="max-w-7xl mx-auto">
-        <!-- HEADER -->
-        <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">Cari Tempat</h1>
+    <div class="px-4 md:px-8 mx-auto">
+      <!-- HEADER -->
+      <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">Cari Tempat</h1>
 
-        <!-- SEARCH BAR -->
-        <div class="relative mb-6">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <SearchIcon :size="20" class="text-slate-400" />
-          </div>
-          <input v-model="searchQuery" @input="handleSearch" type="text" 
-                 class="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm transition-shadow"
-                 placeholder="🔍 Cari tempat... (ketik lokasi manual jika tolak izin)" />
-          <button v-if="searchQuery" @click="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center">
-            <X :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" />
-          </button>
+      <!-- SEARCH BAR -->
+      <div class="relative mb-6">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <SearchIcon :size="20" class="text-slate-400" />
         </div>
-
-        <!-- FILTER CHIPS -->
-        <div class="flex overflow-x-auto gap-2 pb-4 mb-2 hide-scrollbar -mx-4 px-4">
-          <button v-for="filter in filters" :key="filter.id" 
-                  @click="toggleFilter(filter.id)"
-                  class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-colors border"
-                  :class="activeFilter === filter.id 
-                    ? 'bg-primary-500 text-white border-primary-500' 
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'">
-            {{ filter.label }}
-          </button>
-        </div>
-
-        <!-- ERROR STATE -->
-        <div v-if="hasError" class="py-16 flex flex-col items-center justify-center text-center animate-fade-in">
-          <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-4">
-            <AlertTriangle :size="40" />
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Oops, terjadi kesalahan!</h3>
-          <p class="text-slate-500 dark:text-slate-400 mb-6 max-w-xs">Kami tidak bisa mengambil data saat ini. Silakan coba beberapa saat lagi.</p>
-          <button @click="performSearch" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95">
-            Coba Lagi
-          </button>
-        </div>
-
-        <!-- EMPTY STATE -->
-        <div v-else-if="!isLoading && searchResults.length === 0" class="py-16 flex flex-col items-center justify-center text-center animate-fade-in">
-          <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mb-4">
-            <SearchX :size="48" />
-          </div>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Tempat tidak ditemukan</h3>
-          <p class="text-slate-500 dark:text-slate-400 max-w-xs">Coba gunakan kata kunci lain atau ubah filter pencarian Anda.</p>
-        </div>
-
-        <!-- RESULTS GRID -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 animate-fade-in justify-items-center">
-          <!-- Skeleton State -->
-          <template v-if="isLoading">
-            <div v-for="i in 4" :key="i" class="w-full max-w-sm sm:w-auto">
-              <PlaceCard loading />
-            </div>
-          </template>
-          <!-- Data State -->
-          <template v-else>
-            <div v-for="place in searchResults" :key="place.id || place.place_id" class="w-full max-w-[calc(100vw-32px)] sm:max-w-sm sm:w-auto">
-              <PlaceCard :place="place" :parkingInfo="parkingData[place.id] || parkingData[place.place_id]" @save="handleSave" />
-            </div>
-          </template>
-        </div>
+        <input v-model="searchQuery" @input="handleSearch" type="text" 
+               class="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm transition-shadow"
+               placeholder="🔍 Cari tempat... (ketik lokasi manual jika tolak izin)" />
+        <button v-if="searchQuery" @click="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+          <X :size="16" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" />
+        </button>
       </div>
+
+      <!-- FILTER CHIPS -->
+      <div class="flex overflow-x-auto gap-2 pb-4 mb-2 hide-scrollbar">
+        <button v-for="filter in filters" :key="filter.id" 
+                @click="toggleFilter(filter.id)"
+                class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-colors border"
+                :class="activeFilter === filter.id 
+                  ? 'bg-primary-500 text-white border-primary-500' 
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'">
+          {{ filter.label }}
+        </button>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div v-if="hasError" class="py-16 flex flex-col items-center justify-center text-center animate-fade-in">
+        <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-4">
+          <AlertTriangle :size="40" />
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Oops, terjadi kesalahan!</h3>
+        <p class="text-slate-500 dark:text-slate-400 mb-6 max-w-xs">Kami tidak bisa mengambil data saat ini. Silakan coba beberapa saat lagi.</p>
+        <button @click="performSearch" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95">
+          Coba Lagi
+        </button>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div v-else-if="!isLoading && searchResults.length === 0" class="py-16 flex flex-col items-center justify-center text-center animate-fade-in">
+        <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mb-4">
+          <SearchX :size="48" />
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Tempat tidak ditemukan</h3>
+        <p class="text-slate-500 dark:text-slate-400 max-w-xs">Coba gunakan kata kunci lain atau ubah filter pencarian Anda.</p>
+      </div>
+
+      <!-- RESULTS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 animate-fade-in">
+        <!-- Skeleton State -->
+        <template v-if="isLoading">
+          <div v-for="i in 4" :key="i" class="w-full">
+            <PlaceCard loading />
+          </div>
+        </template>
+        <!-- Data State -->
+        <template v-else>
+          <div v-for="place in searchResults" :key="place.id || place.place_id" class="w-full">
+            <PlaceCard :place="place" :parkingInfo="parkingData[place.id] || parkingData[place.place_id]" @save="handleSave" />
+          </div>
+        </template>
+      </div>
+
     </div>
 
     <!-- GLOBAL TOAST -->
@@ -89,6 +88,7 @@
         <button v-if="!authStore.isAuthenticated" @click="authStore.loginWithGoogle()" class="ml-2 bg-white text-slate-900 px-3 py-1 rounded-lg text-xs">Login</button>
       </div>
     </transition>
+
   </div>
 </template>
 

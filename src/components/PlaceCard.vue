@@ -20,7 +20,7 @@
       <div @click="goToDetail" class="absolute inset-0 z-0 cursor-pointer"></div>
 
       <!-- IMAGE -->
-      <div class="aspect-[4/3] w-full relative overflow-hidden bg-slate-100 dark:bg-slate-900 rounded-t-2xl pointer-events-none">
+      <div class="aspect-video sm:aspect-[4/3] w-full relative overflow-hidden bg-slate-100 dark:bg-slate-900 rounded-t-2xl pointer-events-none">
         <img :src="photoUrl" :alt="place.name" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div class="absolute top-3 right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
           <Star :size="14" class="text-amber-500 fill-amber-500" />
@@ -76,7 +76,7 @@
         </div>
 
         <!-- AI SUMMARY -->
-        <div class="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-xl mb-4 border border-primary-100 dark:border-primary-900/30 h-[90px] overflow-hidden flex flex-col relative">
+        <div class="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-xl mb-4 border border-primary-100 dark:border-primary-900/30 h-[70px] sm:h-[90px] overflow-hidden flex flex-col relative">
           <div class="flex items-center gap-1.5 mb-1 text-primary-600 dark:text-primary-400 shrink-0">
             <Sparkles :size="14" />
             <span class="text-xs font-bold">Insight</span>
@@ -243,7 +243,7 @@ const displayTags = computed(() => {
     
     // Style mart tags with a black badge
     if (isMart.value && (text.toLowerCase().includes('indomaret') || text.toLowerCase().includes('alfamart') || text.toLowerCase().includes('alfamidi'))) {
-      colorClass = 'text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider whitespace-nowrap'
+      colorClass = 'bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider whitespace-nowrap'
     }
     
     const lowerText = text.toLowerCase()

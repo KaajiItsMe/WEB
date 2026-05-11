@@ -1,7 +1,6 @@
 <template>
-  <div class="h-screen w-full max-w-full overflow-hidden bg-background-light dark:bg-background-dark flex flex-col">
-    <div class="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-8 pb-32 pt-4 md:pt-8">
-      <div class="max-w-2xl mx-auto">
+  <div class="min-h-screen bg-background-light dark:bg-background-dark pb-28 pt-4 md:pt-8 md:pb-8">
+    <div class="max-w-2xl mx-auto px-4 md:px-8">
       
       <!-- HEADER / USER INFO -->
       <div v-if="authStore.isAuthenticated" class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-8">
@@ -166,18 +165,7 @@
         </div>
       </section>
 
-      <!-- TEMPAT TERSIMPAN -->
-      <section class="mb-8">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-          ❤️ Tempat Tersimpan
-        </h2>
-        <div v-if="savedStore.savedPlaces.length === 0" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-8 text-center shadow-sm">
-          <p class="text-slate-500 mb-2">💔 Belum ada tempat tersimpan</p>
-        </div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PlaceCard v-for="place in savedStore.savedPlaces" :key="place.id" :place="place" />
-        </div>
-      </section>
+
 
       <!-- SETTINGS -->
       <section class="mb-8">
@@ -253,8 +241,8 @@
         <p class="text-center text-[10px] text-slate-400 mt-3">Sesuai dengan kebijakan privasi dan GDPR, Anda berhak menghapus semua data jejak review secara permanen kapan saja.</p>
       </section>
 
-      </div>
     </div>
+  </div>
 
   <!-- ====== TOAST NOTIFICATION ====== -->
   <transition name="toast-slide">
@@ -320,7 +308,6 @@ import { useAuthStore } from '../stores/auth'
 import { useSavedStore } from '../stores/saved'
 import { useSettingsStore } from '../stores/settings'
 import { getUserReviews, getUserStats, deleteUserData } from '../utils/api'
-import PlaceCard from '../components/PlaceCard.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()

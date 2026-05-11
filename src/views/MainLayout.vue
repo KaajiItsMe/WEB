@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark flex flex-col md:flex-row overflow-x-hidden">
+  <div class="min-h-screen bg-background-light dark:bg-background-dark flex overflow-x-hidden">
     
     <!-- DESKTOP SIDEBAR (>= 768px) -->
     <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-16 hover:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 z-40 group overflow-hidden shadow-xl">
@@ -21,22 +21,22 @@
     </aside>
 
     <!-- MAIN CONTENT — sidebar stays mounted, only this div re-renders -->
-    <main class="flex-1 min-w-0 pb-20 md:pb-0 md:ml-16 transition-all duration-300 relative">
+    <main class="flex-1 min-w-0 pb-28 md:pb-0 md:ml-16 transition-all duration-300">
       <div :key="$route.fullPath">
         <router-view />
       </div>
     </main>
 
     <!-- BOTTOM NAVIGATION BAR (< 768px) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] z-40 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-      <div class="flex justify-around items-center h-16">
+    <nav class="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] z-40 shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.1)]">
+      <div class="flex justify-around items-center h-[72px]">
         <router-link v-for="item in navItems" :key="item.path" :to="item.path"
           class="flex flex-col items-center justify-center w-full h-full transition-colors relative"
           :class="isActive(item.path) ? (item.path === '/admin' ? 'text-purple-600' : 'text-primary-500') : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
-          <component :is="item.icon" :size="20" :stroke-width="isActive(item.path) ? 2.5 : 2" class="mb-1 transition-all" :class="isActive(item.path) ? '-translate-y-1' : ''" />
-          <span class="text-[10px] font-medium transition-all" :class="isActive(item.path) ? 'opacity-100' : 'opacity-70'">{{ item.label }}</span>
+          <component :is="item.icon" :size="24" :stroke-width="isActive(item.path) ? 2.5 : 2" class="mb-1 transition-all" :class="isActive(item.path) ? '-translate-y-1' : ''" />
+          <span class="text-[10px] font-bold transition-all" :class="isActive(item.path) ? 'opacity-100' : 'opacity-70'">{{ item.label }}</span>
           <!-- Active Indicator -->
-          <span v-if="isActive(item.path)" class="absolute -top-[1px] w-8 h-[3px] rounded-b-full" :class="item.path === '/admin' ? 'bg-purple-600' : 'bg-primary-500'"></span>
+          <span v-if="isActive(item.path)" class="absolute -top-[1px] w-10 h-[3px] rounded-b-full transition-all" :class="item.path === '/admin' ? 'bg-purple-600' : 'bg-primary-500'"></span>
         </router-link>
       </div>
     </nav>

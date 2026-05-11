@@ -13,24 +13,15 @@ const app = express()
 // SECURITY & CORS CONFIGURATION
 // ==========================================
 
-// 1. Rate Limiting: Mencegah spam & proteksi kuota Gemini
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
-  max: 100, // Maksimal 100 request per IP dalam 15 menit
-  message: { error: 'Terlalu banyak permintaan dari IP ini. Silakan coba lagi dalam 15 menit.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-// Terapkan limiter ke semua route /api/
-app.use('/api/', limiter)
-
-// 2. Restricted CORS: Hanya izinkan domain yang kita kenal
+// 1. Restricted CORS: Hanya izinkan domain yang kita kenal
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  /\.a\.run\.app$/,  // Cloud Run (regex untuk mencakup subdomain)
-  /\.web\.app$/      // Firebase Hosting (regex untuk mencakup subdomain)
+  'https://lokalens-web.web.app',
+  'https://lokalens-web.firebaseapp.com',
+  /\.a\.run\.app$/,  // Cloud Run
+  /\.web\.app$/,      // Firebase Hosting
+  /\.firebaseapp\.app$/ 
 ]
 
 app.use(cors({
@@ -48,10 +39,25 @@ app.use(cors({
       callback(null, true)
     } else {
       console.warn(`[Security] Blocked CORS request from: ${origin}`)
-      callback(new Error('Not allowed by CORS Security Policy'))
+      callback(null, false) // Mengembalikan false agar cors middleware mengirim 403, bukan error internal
     }
-  }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }))
+
+// 2. Rate Limiting: Mencegah spam & proteksi kuota Gemini
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 100, // Maksimal 100 request per IP dalam 15 menit
+  message: { error: 'Terlalu banyak permintaan dari IP ini. Silakan coba lagi dalam 15 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// Terapkan limiter ke semua route /api/
+app.use('/api/', limiter)
 
 app.use(express.json())
 

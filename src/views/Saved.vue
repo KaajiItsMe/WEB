@@ -1,7 +1,6 @@
 <template>
-  <div class="h-screen w-full max-w-full overflow-hidden bg-background-light dark:bg-background-dark flex flex-col">
-    <div class="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-8 pb-32 pt-4 md:pt-8">
-      <div class="max-w-7xl mx-auto">
+  <div class="min-h-screen bg-background-light dark:bg-background-dark pb-28 md:pb-8 pt-4 md:pt-8">
+    <div class="px-4 md:px-8">
 
       <!-- HEADER -->
       <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">Tersimpan</h1>
@@ -48,8 +47,10 @@
         </transition>
 
         <!-- LOADING -->
-        <div v-if="!savedStore.isLoaded" class="flex flex-wrap justify-start gap-6">
-          <PlaceCard v-for="i in 3" :key="i" :loading="true" class="w-full sm:w-72 md:w-80" />
+        <div v-if="!savedStore.isLoaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 animate-fade-in">
+          <div v-for="i in 3" :key="i" class="w-full">
+            <PlaceCard :loading="true" />
+          </div>
         </div>
 
         <!-- EMPTY STATE -->
@@ -63,15 +64,14 @@
         </div>
 
         <!-- RESULTS GRID -->
-        <div v-else class="flex flex-wrap justify-start gap-6 pb-6 animate-fade-in">
-          <div v-for="place in savedStore.savedPlaces" :key="place.id" class="w-full sm:w-72 md:w-80">
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 animate-fade-in">
+          <div v-for="place in savedStore.savedPlaces" :key="place.id" class="w-full">
             <PlaceCard :place="place" :parkingInfo="parkingData[place.id] || parkingData[place.place_id]" :loading="false" @save="handleSave" />
           </div>
         </div>
 
       </template>
 
-      </div>
     </div>
 
     <!-- GLOBAL TOAST -->

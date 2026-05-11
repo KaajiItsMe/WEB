@@ -74,9 +74,17 @@ export const useSavedStore = defineStore('saved', () => {
       const data = {
         id: place.id,
         name: place.name,
-        rating: place.rating || null,
-        budget: place.budget || null,
+        rating: place.rating || 0,
+        user_ratings_total: place.user_ratings_total || 0,
+        budget: place.budget || 'Rp',
+        photos: place.photos || [],
         image: place.image || null,
+        tags: place.tags || [],
+        aiSummary: place.aiSummary || '',
+        price_level: place.price_level !== undefined ? place.price_level : null,
+        lat: place.lat || null,
+        lng: place.lng || null,
+        hasParking: place.hasParking || false,
         saved_at: new Date().toISOString(),
       }
       await setDoc(_firestoreRef(uid, place.id), data)
@@ -92,9 +100,17 @@ export const useSavedStore = defineStore('saved', () => {
       const data = {
         id: place.id,
         name: place.name,
-        rating: place.rating || null,
-        budget: place.budget || null,
+        rating: place.rating || 0,
+        user_ratings_total: place.user_ratings_total || 0,
+        budget: place.budget || 'Rp',
+        photos: place.photos || [],
         image: place.image || null,
+        tags: place.tags || [],
+        aiSummary: place.aiSummary || '',
+        price_level: place.price_level !== undefined ? place.price_level : null,
+        lat: place.lat || null,
+        lng: place.lng || null,
+        hasParking: place.hasParking || false,
         saved_at: place.saved_at || new Date().toISOString(),
       }
       await setDoc(_firestoreRef(uid, place.id), data).catch(() => {})
