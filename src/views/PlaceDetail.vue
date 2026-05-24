@@ -117,8 +117,21 @@
     <!-- CONTENT STATE -->
     <div v-else-if="aiData" class="px-4 md:px-8 max-w-4xl mx-auto -mt-4 relative z-10 space-y-6">
       
+      <!-- DESKRIPSI TOKO / LOKASI -->
+      <div v-if="basePlace.address" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm mt-12 flex items-start gap-4">
+        <div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded-full flex items-center justify-center shrink-0">
+          <MapPin :size="24" />
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1">Detail Lokasi</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            {{ basePlace.address }}
+          </p>
+        </div>
+      </div>
+
       <!-- AI SUMMARY CARD -->
-      <div class="bg-primary-50 dark:bg-primary-900/20 p-5 rounded-2xl border border-primary-100 dark:border-primary-900/30 shadow-sm mt-12">
+      <div class="bg-primary-50 dark:bg-primary-900/20 p-5 rounded-2xl border border-primary-100 dark:border-primary-900/30 shadow-sm" :class="{'mt-0': basePlace.address, 'mt-12': !basePlace.address}">
         <div class="flex items-center gap-2 mb-2 text-primary-600 dark:text-primary-400">
           <Sparkles :size="20" />
           <span class="font-bold text-lg">AI Summary</span>
@@ -459,7 +472,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSavedStore } from '../stores/saved'
 import { useAuthStore } from '../stores/auth'
 import { analyzePlace, submitPrivateReview, fetchPlaceDetails, API_BASE_URL } from '../utils/api'
-import { ArrowLeft, Heart, Star, Sparkles, BarChart2, CircleParking as ParkingCircle, AlertTriangle, User, Map, Navigation, Car, MessageSquareWarning, X, RefreshCw, ShieldCheck, ChevronLeft, ChevronRight, Camera, Lock, FileText } from 'lucide-vue-next'
+import { ArrowLeft, Heart, Star, Sparkles, BarChart2, CircleParking as ParkingCircle, AlertTriangle, User, Map, Navigation, Car, MessageSquareWarning, X, RefreshCw, ShieldCheck, ChevronLeft, ChevronRight, Camera, Lock, FileText, MapPin } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -643,7 +656,8 @@ const fetchBaseDetails = async () => {
         rating: data.rating,
         photos: data.photos || [],
         lat: data.geometry?.location?.lat,
-        lng: data.geometry?.location?.lng
+        lng: data.geometry?.location?.lng,
+        address: data.formatted_address || data.vicinity
       }
       if (basePlace.value.photos.length > 1) startAutoScroll()
     }
