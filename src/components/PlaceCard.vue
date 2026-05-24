@@ -115,8 +115,8 @@
           </a>
         </div>
         
-        <button @click.stop="goToReview" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors z-10 pointer-events-auto">
-          <MessageSquareWarning :size="16" /> Beri Review Private
+        <button @click.stop="goToDetail" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors z-10 pointer-events-auto">
+          Cek Detail
         </button>
 
       </div>
