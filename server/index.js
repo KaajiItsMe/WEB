@@ -19,9 +19,9 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://lokalens-web.web.app',
   'https://lokalens-web.firebaseapp.com',
-  /\.a\.run\.app$/,  // Cloud Run
+  /\.run\.app$/,  // Cloud Run
   /\.web\.app$/,      // Firebase Hosting
-  /\.firebaseapp\.app$/ 
+  /\.firebaseapp\.com$/ 
 ]
 
 app.use(cors({
