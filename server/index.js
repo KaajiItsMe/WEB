@@ -406,11 +406,12 @@ app.post('/api/analyze', async (req, res) => {
 
       const googleReviews = details.reviews?.map(r => r.text) || []
 
-      // 🔥 BARU: Ambil SEMUA ulasan internal dari database LokaLens
+      // 🔥 BARU: Ambil HANYA ulasan internal yang berstatus 'approved' dari database LokaLens
       let internalReviews = []
       try {
         const snapshot = await db.collection('reviews_private')
           .where('place_id', '==', place_id)
+          .where('status', '==', 'approved')
           .get()
 
         snapshot.forEach(doc => {
@@ -600,45 +601,14 @@ app.get('/api/places/parking-batch', async (req, res) => {
 // ==========================================
 // REVIEWS PRIVATE ROUTES (Firebase Firestore)
 // ==========================================
-app.post('/api/reviews-private', async (req, res) => {
-  const { place_id, rating, review_text, parking_type, parking_notes, photo, user_id } = req.body
-
-  if (!rating || rating < 1.0 || rating > 5.0) {
-    return res.status(400).json({ error: 'Rating wajib antara 1.0 sampai 5.0' })
-  }
-
-  if (!review_text || review_text.length < 10) {
-    return res.status(400).json({ error: 'Review text minimal 10 karakter' })
-  }
-
-  // Validasi parking
-  const validParkingTypes = ['kang_parkir', 'resmi', 'bayar', 'gratis', 'ada_parkir', 'belum_ada_info']
-  if (!parking_type || !validParkingTypes.includes(parking_type)) {
-    return res.status(400).json({ error: 'Kategori parkir WAJIB dipilih' })
-  }
-
+// Helper to update dominant parking type for a place
+async function updateDominantParkingType(placeId) {
   try {
-    const reviewData = {
-      place_id,
-      rating,
-      review_text,
-      parking_type,
-      parking_notes: parking_notes || null,
-      photo: photo || null,
-      user_id: user_id || 'anon_user',
-      status: 'approved', // Langsung approve dulu agar testing terasa instan
-      is_public: false,
-      created_at: new Date().toISOString()
-    }
-
-    const docRef = await db.collection('reviews_private').add(reviewData)
-
-    // 🔥 AUTO-UPDATE places_analysis dengan Dominant Type
-    const analysisRef = db.collection('places_analysis').doc(place_id)
-
-    // Ambil semua review untuk place ini
+    const analysisRef = db.collection('places_analysis').doc(placeId)
+    
+    // Ambil semua review yang berstatus 'approved' untuk tempat ini
     const reviewsSnapshot = await db.collection('reviews_private')
-      .where('place_id', '==', place_id)
+      .where('place_id', '==', placeId)
       .where('status', '==', 'approved')
       .get()
 
@@ -677,7 +647,7 @@ app.post('/api/reviews-private', async (req, res) => {
     const label = parkingLabels[dominantType]
 
     await analysisRef.set({
-      place_id,
+      place_id: placeId,
       parking_info: {
         dominant_type: dominantType,
         dominant_count: dominantCount,
@@ -691,9 +661,47 @@ app.post('/api/reviews-private', async (req, res) => {
       },
       updated_at: new Date().toISOString()
     }, { merge: true })
+    console.log(`[Parking Engine] Recalculated dominant parking for: ${placeId}`)
+  } catch (error) {
+    console.error(`[Parking Engine] Error recalculating dominant parking for ${placeId}:`, error.message)
+  }
+}
+
+app.post('/api/reviews-private', async (req, res) => {
+  const { place_id, rating, review_text, parking_type, parking_notes, photo, user_id } = req.body
+
+  if (!rating || rating < 1.0 || rating > 5.0) {
+    return res.status(400).json({ error: 'Rating wajib antara 1.0 sampai 5.0' })
+  }
+
+  if (!review_text || review_text.length < 10) {
+    return res.status(400).json({ error: 'Review text minimal 10 karakter' })
+  }
+
+  // Validasi parking
+  const validParkingTypes = ['kang_parkir', 'resmi', 'bayar', 'gratis', 'ada_parkir', 'belum_ada_info']
+  if (!parking_type || !validParkingTypes.includes(parking_type)) {
+    return res.status(400).json({ error: 'Kategori parkir WAJIB dipilih' })
+  }
+
+  try {
+    const reviewData = {
+      place_id,
+      rating,
+      review_text,
+      parking_type,
+      parking_notes: parking_notes || null,
+      photo: photo || null,
+      user_id: user_id || 'anon_user',
+      status: 'pending', // Set awal sebagai pending agar perlu moderasi admin
+      is_public: false,
+      created_at: new Date().toISOString()
+    }
+
+    const docRef = await db.collection('reviews_private').add(reviewData)
 
     res.status(200).json({
-      message: "Review + info parkir tersimpan! 🔒 AI LokaLens makin pintar!",
+      message: "Review + info parkir tersimpan! 🔒 Sedang menunggu moderasi admin.",
       data: { id: docRef.id, ...reviewData }
     })
   } catch (error) {
@@ -749,6 +757,38 @@ app.get('/api/reviews-private/user/:uid', async (req, res) => {
     } else {
       res.status(500).json({ error: 'Gagal mengambil riwayat review' })
     }
+  }
+})
+
+// DELETE SINGLE USER REVIEW
+app.delete('/api/reviews-private/:id', verifyToken, async (req, res) => {
+  const { id } = req.params
+  const userId = req.user.uid
+
+  try {
+    const docRef = db.collection('reviews_private').doc(id)
+    const docSnap = await docRef.get()
+    
+    if (!docSnap.exists) {
+      return res.status(404).json({ error: 'Review tidak ditemukan' })
+    }
+
+    const reviewData = docSnap.data()
+
+    // Verifikasi kepemilikan review (atau admin)
+    if (reviewData.user_id !== userId && !req.user.admin) {
+      return res.status(403).json({ error: 'Anda tidak memiliki hak untuk menghapus review ini' })
+    }
+
+    await docRef.delete()
+
+    // Recalculate dominant parking after deletion
+    await updateDominantParkingType(reviewData.place_id)
+
+    res.json({ message: 'Review berhasil dihapus' })
+  } catch (error) {
+    console.error('Error deleting review:', error)
+    res.status(500).json({ error: 'Gagal menghapus review' })
   }
 })
 
@@ -820,13 +860,23 @@ app.get('/api/admin/data-quality', adminAuth, async (req, res) => {
 app.post('/api/admin/reviews/:id/approve', adminAuth, async (req, res) => {
   const { id } = req.params
   try {
+    const docRef = db.collection('reviews_private').doc(id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      return res.status(404).json({ error: 'Review tidak ditemukan' })
+    }
+    const reviewData = docSnap.data()
     const now = new Date().toISOString()
-    await db.collection('reviews_private').doc(id).update({
+    await docRef.update({
       status: 'approved',
       used_by_ai: true,
       updated_at: now,
       approved_at: now
     })
+
+    // Recalculate dominant parking after approval
+    await updateDominantParkingType(reviewData.place_id)
+
     res.json({ message: `Review ${id} approved.` })
   } catch (error) {
     console.error('Error approving review:', error)
@@ -838,13 +888,23 @@ app.post('/api/admin/reviews/:id/reject', adminAuth, async (req, res) => {
   const { id } = req.params
   const { reason } = req.body
   try {
+    const docRef = db.collection('reviews_private').doc(id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      return res.status(404).json({ error: 'Review tidak ditemukan' })
+    }
+    const reviewData = docSnap.data()
     const now = new Date().toISOString()
-    await db.collection('reviews_private').doc(id).update({
+    await docRef.update({
       status: 'rejected',
       rejection_reason: reason || 'Tidak sesuai pedoman',
       updated_at: now,
       rejected_at: now
     })
+
+    // Recalculate dominant parking since a review is rejected
+    await updateDominantParkingType(reviewData.place_id)
+
     res.json({ message: `Review ${id} rejected.` })
   } catch (error) {
     console.error('Error rejecting review:', error)
@@ -885,12 +945,22 @@ app.get('/api/admin/reviews/rejected', adminAuth, async (req, res) => {
 app.post('/api/admin/reviews/restore', adminAuth, async (req, res) => {
   const { review_id } = req.body
   try {
-    await db.collection('reviews_private').doc(review_id).update({
+    const docRef = db.collection('reviews_private').doc(review_id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      return res.status(404).json({ error: 'Review tidak ditemukan' })
+    }
+    const reviewData = docSnap.data()
+    await docRef.update({
       status: 'pending',
       rejection_reason: null,
       rejected_at: null,
       updated_at: new Date().toISOString()
     })
+
+    // Recalculate dominant parking since it goes back to pending status
+    await updateDominantParkingType(reviewData.place_id)
+
     res.json({ message: 'Review dikembalikan ke pending' })
   } catch (error) {
     console.error('Error restoring review:', error)

@@ -228,7 +228,7 @@
             <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div v-for="item in filteredApproved" :key="item.id" class="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-emerald-900/30 shadow-sm relative overflow-hidden group">
                 <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                   <CheckCircle :size="48" class="text-emerald-500" />
+                   <CheckCircle class="w-12 h-12 text-emerald-500" />
                 </div>
                 <div class="flex justify-between items-start mb-6">
                   <div>
@@ -242,6 +242,11 @@
                   <p class="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed" :class="{'line-clamp-3': !item.expanded}">"{{ item.review_text }}"</p>
                 </div>
                 <button v-if="item.review_text.length > 150" @click="item.expanded = !item.expanded" class="text-[10px] font-black text-primary-500 mt-2 uppercase tracking-widest ml-1">{{ item.expanded ? 'Ciutkan' : 'Baca Selengkapnya' }}</button>
+                
+                <div class="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+                  <button @click="handleRestore(item.id)" class="flex-1 py-2 bg-amber-500 text-white text-[10px] font-black rounded-xl hover:bg-amber-600 transition-all uppercase tracking-widest shadow-sm">Pending</button>
+                  <button @click="openReject(item)" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-100 transition-all border border-red-100 dark:border-red-900/50 uppercase tracking-widest">Tolak</button>
+                </div>
               </div>
             </div>
           </div>
@@ -276,9 +281,14 @@
                    <p class="text-xs text-red-600 dark:text-red-300 font-bold">{{ item.rejection_reason }}</p>
                 </div>
                 <p class="text-sm text-slate-500 dark:text-slate-400 italic mb-6">"{{ item.review_text }}"</p>
-                <button @click="handleRestore(item.id)" class="w-full py-3.5 bg-amber-500 text-white text-[10px] font-black rounded-2xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 uppercase tracking-widest">
-                  Pulihkan ke Antrean
-                </button>
+                <div class="grid grid-cols-2 gap-2">
+                  <button @click="handleRestore(item.id)" class="py-3.5 bg-amber-500 text-white text-[10px] font-black rounded-2xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 uppercase tracking-widest">
+                    Pulihkan
+                  </button>
+                  <button @click="confirmSingleDelete(item.id)" class="py-3.5 bg-red-600 text-white text-[10px] font-black rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest">
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -291,8 +301,8 @@
                  <Trash2 :size="40" />
                </div>
                <div>
-                 <h2 class="text-3xl font-black mb-2 leading-tight">Area Berbahaya</h2>
-                 <p class="text-red-100 font-medium">Ulasan yang dihapus permanen tidak dapat dikembalikan. Gunakan fitur ini hanya untuk spam atau konten yang benar-benar terlarang.</p>
+                 <h2 class="text-3xl font-black mb-2 leading-tight">Hapus Massal</h2>
+                 <p class="text-red-100 font-medium">Pilih beberapa ulasan sekaligus untuk dihapus permanen secara massal. Tindakan ini tidak dapat dibatalkan.</p>
                </div>
             </div>
 
@@ -307,7 +317,7 @@
                  <span class="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Pilih Semua ({{ rejectedReviews.length }})</span>
               </label>
               <button v-if="selectedIds.length > 0" @click="showConfirmDelete = true" class="w-full sm:w-fit px-8 py-4 bg-red-600 text-white text-[11px] font-black rounded-2xl hover:bg-red-700 shadow-xl shadow-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest animate-fade-in">
-                <Trash2 :size="18" /> Hapus Permanen ({{ selectedIds.length }})
+                <Trash2 :size="18" /> Hapus Terpilih ({{ selectedIds.length }})
               </button>
             </div>
 
@@ -568,7 +578,7 @@
            <button @click="handlePermanentDelete" :disabled="isDeleting" class="py-5 text-sm font-black bg-red-600 text-white rounded-[1.5rem] hover:bg-red-700 shadow-2xl shadow-red-600/40 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 transition-all">
              <RefreshCw v-if="isDeleting" :size="20" class="animate-spin" /> YAKIN, HAPUS SEKARANG!
            </button>
-           <button @click="showConfirmDelete = false" class="py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl">Batal</button>
+           <button @click="closeConfirmDelete" class="py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl">Batal</button>
         </div>
       </div>
     </div>
@@ -625,7 +635,7 @@ const tabs = [
   { id: 'pending', label: 'Pending', icon: Clock },
   { id: 'approved', label: 'Approved', icon: CheckCircle2 },
   { id: 'rejected', label: 'Rejected', icon: XCircle },
-  { id: 'permanent_delete', label: 'Hapus Permanen', icon: Trash2 },
+  { id: 'permanent_delete', label: 'Hapus Massal', icon: Trash2 },
   { id: 'parking', label: 'Verifikasi Parkir', icon: CircleParking },
 ]
 
@@ -752,6 +762,18 @@ const openReject = (item) => {
   rejectModal.value = { show: true, id: item.id, reason: rejectionOptions[0], customReason: '' }
 }
 
+const singleDeleteId = ref(null)
+
+const confirmSingleDelete = (id) => {
+  singleDeleteId.value = id
+  showConfirmDelete.value = true
+}
+
+const closeConfirmDelete = () => {
+  showConfirmDelete.value = false
+  singleDeleteId.value = null
+}
+
 const submitReject = async () => {
   processingId.value = rejectModal.value.id
   const finalReason = rejectModal.value.reason === 'Alasan lainnya...' ? rejectModal.value.customReason : rejectModal.value.reason
@@ -760,9 +782,10 @@ const submitReject = async () => {
     await rejectReview(processingId.value, finalReason, token)
     showToast('Review ditolak.', 'success')
     queue.value = queue.value.filter(item => item.id !== processingId.value)
-    dashboard.value.pending -= 1
-    dashboard.value.rejected += 1
+    approvedReviews.value = approvedReviews.value.filter(item => item.id !== processingId.value)
     rejectModal.value.show = false
+    fetchData()
+    if (activeTab.value === 'approved') fetchApproved()
   } catch (error) { showToast(error.message, 'error') }
   finally { processingId.value = null }
 }
@@ -773,20 +796,27 @@ const handleRestore = async (id) => {
     await restoreReview(id, token)
     showToast('Review dikembalikan ke pending.', 'success')
     rejectedReviews.value = rejectedReviews.value.filter(r => r.id !== id)
-    dashboard.value.rejected -= 1
-    dashboard.value.pending += 1
+    approvedReviews.value = approvedReviews.value.filter(r => r.id !== id)
+    fetchData()
+    if (activeTab.value === 'approved') fetchApproved()
+    if (activeTab.value === 'rejected') fetchRejected()
   } catch (e) { showToast(e.message, 'error') }
 }
 
 const handlePermanentDelete = async () => {
-  if (selectedIds.value.length === 0) return
+  const idsToDelete = singleDeleteId.value ? [singleDeleteId.value] : selectedIds.value
+  if (idsToDelete.length === 0) return
   isDeleting.value = true
   try {
     const token = authStore.user?.token || ''
-    await deletePermanentReviews(selectedIds.value, token)
-    showToast(`${selectedIds.value.length} review dihapus permanen`, 'success')
-    rejectedReviews.value = rejectedReviews.value.filter(r => !selectedIds.value.includes(r.id))
-    selectedIds.value = []
+    await deletePermanentReviews(idsToDelete, token)
+    showToast(`${idsToDelete.length} review dihapus permanen`, 'success')
+    rejectedReviews.value = rejectedReviews.value.filter(r => !idsToDelete.includes(r.id))
+    if (singleDeleteId.value) {
+      singleDeleteId.value = null
+    } else {
+      selectedIds.value = []
+    }
     showConfirmDelete.value = false
     fetchData() // Refresh counts
   } catch (e) { showToast(e.message, 'error') }

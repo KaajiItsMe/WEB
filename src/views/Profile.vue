@@ -149,7 +149,12 @@
                class="p-4" :class="{'border-b border-slate-100 dark:border-slate-700': index !== reviews.length - 1}">
             <div class="flex justify-between items-start mb-2">
               <h4 class="font-bold text-slate-900 dark:text-white text-sm">{{ getPlaceName(review.place_id) }}</h4>
-              <span class="text-[10px] text-slate-400">{{ new Date(review.created_at).toLocaleDateString('id-ID') }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-400">{{ new Date(review.created_at).toLocaleDateString('id-ID') }}</span>
+                <button @click="confirmDeleteReview(review.id)" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Hapus Review">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </div>
             <div class="flex items-center gap-2 mb-2">
               <div class="flex gap-0.5">
@@ -307,7 +312,7 @@ import { Star, Flame, Camera, MapPin as MapPinIcon, Compass, Shield, Award, Chev
 import { useAuthStore } from '../stores/auth'
 import { useSavedStore } from '../stores/saved'
 import { useSettingsStore } from '../stores/settings'
-import { getUserReviews, getUserStats, deleteUserData } from '../utils/api'
+import { getUserReviews, getUserStats, deleteUserData, deleteUserReview } from '../utils/api'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -411,6 +416,22 @@ const confirmDeleteData = async () => {
     showToast('Gagal menghapus data: ' + err.message, 'error')
   } finally {
     isDeletingData.value = false
+  }
+}
+
+// ====== DELETE SINGLE REVIEW ======
+const confirmDeleteReview = async (id) => {
+  if (confirm(locale.value === 'id' ? 'Apakah Anda yakin ingin menghapus review ini secara permanen?' : 'Are you sure you want to permanently delete this review?')) {
+    try {
+      const token = authStore.user?.token
+      await deleteUserReview(id, token)
+      showToast(locale.value === 'id' ? 'Review berhasil dihapus' : 'Review successfully deleted')
+      reviews.value = reviews.value.filter(r => r.id !== id)
+      // Refresh stats
+      fetchReviewsAndStats()
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
 }
 

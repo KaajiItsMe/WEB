@@ -220,3 +220,10 @@ export const removeParkingVerification = async (placeId, token) => {
     headers: getAuthHeaders(token)
   })
 }
+
+export const deleteUserReview = async (id, token) => {
+  return await fetchJSON(`${API_BASE_URL}/reviews-private/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token)
+  })
+}
