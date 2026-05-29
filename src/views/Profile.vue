@@ -416,8 +416,9 @@ const confirmDeleteData = async () => {
 
 // ====== DATA FETCHING ======
 const getPlaceName = (id) => {
-  const place = dummyPlaces.find(p => p.id === parseInt(id))
-  return place ? place.name : `Place #${id}`
+  const review = reviews.value.find(r => r.place_id === id)
+  if (review && review.place_name) return review.place_name
+  return `Tempat #${id ? id.toString().substring(0, 6) : ''}`
 }
 
 const fetchReviewsAndStats = async () => {

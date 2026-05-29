@@ -719,6 +719,27 @@ app.get('/api/reviews-private/user/:uid', async (req, res) => {
       reviews.push({ id: doc.id, ...doc.data() })
     })
 
+    // Resolve place names in batch using db.getAll
+    try {
+      const placeIds = [...new Set(reviews.map(r => r.place_id).filter(Boolean))]
+      if (placeIds.length > 0) {
+        const refs = placeIds.map(id => db.collection('places_details_cache').doc(id))
+        const docs = await db.getAll(...refs)
+        const nameMap = {}
+        docs.forEach(doc => {
+          if (doc.exists) {
+            const data = doc.data()
+            nameMap[doc.id] = data.result?.name || data.name
+          }
+        })
+        reviews.forEach(r => {
+          r.place_name = nameMap[r.place_id] || `Tempat #${r.place_id.substring(0, 6)}`
+        })
+      }
+    } catch (e) {
+      console.warn('Failed to resolve place names for reviews:', e.message)
+    }
+
     res.json(reviews)
   } catch (error) {
     console.error('Error fetching user reviews:', error)
