@@ -214,6 +214,9 @@
               </div>
               <div class="flex items-center gap-3">
                  <input type="date" v-model="filterDate" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 shadow-sm" />
+                 <button v-if="filterDate" @click="filterDate = ''" class="px-4 py-3.5 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-all font-bold text-xs uppercase tracking-widest border border-red-100 dark:border-red-900/50">
+                    Reset
+                 </button>
                  <button @click="fetchApproved" class="p-3.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 active:scale-90 transition-all">
                     <RefreshCw :size="20" :class="{'animate-spin': isFetchingApproved}" />
                  </button>
