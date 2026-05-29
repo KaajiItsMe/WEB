@@ -147,11 +147,17 @@ gcloud run deploy lokalens-backend --source . --region asia-southeast2
 ### 3. Frontend (Client)
 
 ```bash
+# Untuk menjalankan lokal
 npm install
 npm run dev
 ```
 
 Buka `http://localhost:5173` di browser.
+
+```bash
+# Untuk deploy ke Google Cloud Run (menggunakan Dockerfile & Nginx)
+gcloud run deploy lokalens-frontend --source . --region asia-southeast2 --allow-unauthenticated
+```
 
 ### 4. Setup Admin
 
